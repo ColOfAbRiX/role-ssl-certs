@@ -55,16 +55,19 @@ ssl_email:               admin@example.com
 ssl_sequence: []
 # # Root CA
 # - name: root_ca
+#   Custom paths that override the default working path for this key only.
 #   # If using custom paths, they must exist beforehand
 #   key_base:    /tmp/key
 #   csr_base:    /tmp/csr
 #   crt_base:    /tmp/crt
+#   # Definition of the private key
 #   key:
 #     bits:                   4096
+#   # Definition of the certificate
 #   certificate:
 #     self_signed:            yes
 #     common_name:            Root CA
-#     organizational_unit: Example Security Office
+#     organizational_unit:    Example Security Office
 #     # Installs the certificate on the system
 #     trust:                  yes
 #     # SSL v3 extensions. Default is to omit these values
@@ -82,6 +85,7 @@ ssl_sequence: []
 #   force_remote: yes
 #   # If set to false, no operation will be performed
 #   enabled: yes
+#   # Definition of the private key
 #   key:
 #     bits:                   2048
 #     # File modifiers, as per usual Ansible configuration
@@ -89,6 +93,7 @@ ssl_sequence: []
 #     group:                  nginx
 #     # If set to no the file will not be stored locally
 #     fetch:                  no
+#   # Definition of the certificate
 #   certificate:
 #     common_name:            "{{ ansible_fqdn }}"
 #     alt_names_dns:          ["internal.example.com"]

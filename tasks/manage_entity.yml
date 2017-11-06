@@ -19,15 +19,15 @@
 
    - name: "Install Certificate"
      copy:
-       src:     "{{ local_cert_file }}"
-       dest:    "/etc/pki/ca-trust/source/anchors/{{ cert_file | basename }}"
-       force:   yes
-       owner:   root
-       group:   root
-       mode:    '0644'
-       seuser:  system_u
-       serole:  object_r
-       setype:  cert_t
+       src:    "{{ local_cert_file }}"
+       dest:   "/etc/pki/ca-trust/source/anchors/{{ cert_file | basename }}"
+       force:  yes
+       owner:  root
+       group:  root
+       mode:   '0644'
+       seuser: system_u
+       serole: object_r
+       setype: cert_t
      when: certificate.trust | default(False) | bool
 
    - name: "Update SSL Certificate Authority Store"

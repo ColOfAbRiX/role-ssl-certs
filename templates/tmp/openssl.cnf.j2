@@ -16,13 +16,13 @@ prompt                  = no
 # The section containing the distinguished name fields to prompt for when
 # generating a certificate or certificate request.
 [ req_distinguished_name ]
-C                       = {{ cert_subj_country }}
-ST                      = {{ cert_subj_state }}
-L                       = {{ cert_subj_location }}
-O                       = {{ cert_subj_org }}
-OU                      = {{ cert_subj_org_unit }}
-CN                      = {{ certificate.common_name }}
-emailAddress            = {{ cert_subj_email }}
+C            = {{ cert_subj_country }}
+ST           = {{ cert_subj_state }}
+L            = {{ cert_subj_location }}
+O            = {{ cert_subj_org }}
+OU           = {{ cert_subj_org_unit }}
+CN           = {{ certificate.common_name }}
+emailAddress = {{ cert_subj_email }}
 
 # The configuration file section containing a list of extensions to add to
 # certificate generated when the -x509 switch is used.
