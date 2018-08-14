@@ -3,8 +3,16 @@
 
 - name: "Require Correct Linux Distribution"
   assert:
-    that: ansible_distribution | lower in ['redhat', 'centos', 'sles']
-    msg:  "This Linux distrution is not supported by the role."
+    that: (ansible_distribution in ['CentOS', 'RedHat'] and ansible_distribution_version | version_compare('7.0.0', '>='))
+    msg:  "This Linux distribution '{{ ansible_distribution }} {{ ansible_distribution_version }}' is not supported by the role."
+  tags: ssl-certs
+
+- name: "Include OS Variables"
+  include_vars: "{{ item }}"
+  with_first_found:
+   - "vars-{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml"
+   - "vars-{{ ansible_distribution }}.yml"
+   - "vars-{{ ansible_os_family }}.yml"
   tags: ssl-certs
 
 - set_fact:
@@ -35,6 +43,11 @@
     ssl_store_keys_base:  "{{ ssl_store_base }}/{{ ssl_key_dir.name }}"
     ssl_store_csr_base:   "{{ ssl_store_base }}/{{ ssl_csr_dir.name }}"
     ssl_store_certs_base: "{{ ssl_store_base }}/{{ ssl_crt_dir.name }}"
+  tags: ssl-certs
+
+- name: "Install Dependencies"
+  package: name="{{ item }}" state=present
+  with_items: "{{ ssl_packages_dependencies }}"
   tags: ssl-certs
 
 - name: "Create Directories"

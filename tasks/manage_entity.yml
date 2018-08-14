@@ -1,6 +1,7 @@
 ---
 
-- set_fact:
+- name: "Set Facts : {{ entity.name }}"
+  set_fact:
     private_key:     "{{ entity.key | default(omit) }}"
     certificate:     "{{ entity.certificate | default(omit) }}"
     key_file:        "{{ entity.key_base | default(ssl_keys_base.path) }}/{{ entity.name }}.key"
@@ -17,7 +18,7 @@
    - include: "create_certificate.yml"
      when: entity.certificate is defined
 
-   - name: "Install Certificate"
+   - name: "Install Certificate : {{ entity.name }}"
      copy:
        src:    "{{ local_cert_file }}"
        dest:   "/etc/pki/ca-trust/source/anchors/{{ cert_file | basename }}"
@@ -30,7 +31,7 @@
        setype: cert_t
      when: certificate.trust | default(False) | bool
 
-   - name: "Update SSL Certificate Authority Store"
+   - name: "Update RHEL/CentOS CA Store : {{ entity.name }}"
      command: update-ca-trust
      async: 15
      poll: 0

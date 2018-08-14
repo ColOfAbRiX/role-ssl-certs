@@ -12,7 +12,7 @@ The role can:
 
 ## Requirements
 
-The role requires RHEL/CentOS 7 to work.
+The role requires RHEL/CentOS 7 to work. The creation of certificate most probably works on other platforms but it hasn't been tested and the role has been locked for RHEL/CentOS only.
 
 OpenSSL is also required to be installed on the target system.
 

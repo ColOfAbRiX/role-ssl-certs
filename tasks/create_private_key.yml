@@ -1,23 +1,23 @@
 ---
 
-- name: "{{ entity.name }} : Copy Local Key"
+- name: "Copy Local Key : {{ entity.name }}"
   copy:
     src:  "{{ local_key_file }}"
     dest: "{{ key_file }}"
   when: not entity.force_remote | default(False) | bool
   ignore_errors: yes
 
-- name: "{{ entity.name }} : Force Creation of the Key"
+- name: "Force Creation of the Key : {{ entity.name }}"
   file: path="{{ key_file }}" state=absent
   when: entity.force_create | default(False) | bool
 
-- name: "{{ entity.name }} : Generate Key"
+- name: "Generate Key : {{ entity.name }}"
   shell: openssl genrsa -out "{{ key_file }}" {{ private_key.bits }}
   args:
     creates: "{{ key_file }}"
   register: private_key_creation
 
-- name: "{{ entity.name }} : Key File Permissions"
+- name: "Key File Permissions : {{ entity.name }}"
   file:
     path:   "{{ key_file }}"
     owner:  "{{ private_key.owner | default(omit) }}"
@@ -28,7 +28,7 @@
     setype: "{{ private_key.setype | default(omit) }}"
 
 # If the key has been copied from locally, then this will have no effect
-- name: "{{ entity.name }} : Download Key"
+- name: "Download Key : {{ entity.name }}"
   fetch:
     src:  "{{ key_file }}"
     dest: "{{ local_key_file }}"

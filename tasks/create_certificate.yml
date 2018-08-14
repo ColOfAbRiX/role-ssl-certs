@@ -1,6 +1,7 @@
 ---
 
-- set_fact:
+- name: "Set Facts : {{ entity.name }}"
+  set_fact:
     cert_subj_country:  "{{ certificate.country | default(ssl_country) }}"
     cert_subj_email:    "{{ certificate.email | default(ssl_email) }}"
     cert_subj_location: "{{ certificate.location | default(ssl_location) }}"
@@ -9,27 +10,21 @@
     cert_subj_state:    "{{ certificate.state | default(ssl_state) }}"
 
 
-- name: "Use Custom Configuration File"
+- name: "Use Custom Configuration File : {{ entity.name }}"
   template:
     src:    tmp/openssl.cnf.j2
     dest:   /tmp/openssl.cnf
     mode:   '0644'
-    force:  yes
-    owner:  root
-    group:  root
-    seuser: system_u
-    serole: object_r
-    setype: etc_t
   changed_when: false
 
-- name: "{{ entity.name }} : Copy Local Certificate"
+- name: "Copy Local Certificate : {{ entity.name }}"
   copy:
     src:  "{{ local_cert_file }}"
     dest: "{{ cert_file }}"
   when: not entity.force_remote | default(False) | bool
   ignore_errors: yes
 
-- name: "{{ entity.name }} : Force Creation of the Certificate"
+- name: "Force Creation of the Certificate : {{ entity.name }}"
   file:
     path: "{{ item }}"
     state: absent
@@ -40,7 +35,7 @@
 
 ## Self Signed Certificate ##
 
-- name: "{{ entity.name }} : Generate Self Signed Certificate"
+- name: "Generate Self Signed Certificate : {{ entity.name }}"
   shell: |
     openssl req \
       -config /tmp/openssl.cnf \
@@ -66,7 +61,7 @@
        signing_key_file: "{{ signing_key.base_path | default(ssl_keys_base.path) }}/{{ signing_key.name }}.key"
        signing_crt_file: "{{ signing_key.csr_base | default(ssl_certs_base.path) }}/{{ signing_key.name }}.crt"
 
-   - name: "{{ entity.name }} : Generate Certificate Signing Request"
+   - name: "Generate Certificate Signing Request : {{ entity.name }}"
      shell: |
        openssl req \
          -config /tmp/openssl.cnf \
@@ -76,7 +71,7 @@
      args:
        creates: "{{ cert_file }}"
 
-   - name: "{{ entity.name }} : Sign CSR and Generate Certificate"
+   - name: "Sign CSR and Generate Certificate : {{ entity.name }}"
      shell: |
        openssl x509 \
          -req \
@@ -96,7 +91,7 @@
   when: not certificate.self_signed | default(False) | bool
 
 
-- name: "{{ entity.name }} : Certificate File Permissions"
+- name: "Certificate File Permissions : {{ entity.name }}"
   file:
     path:   "{{ cert_file }}"
     owner:  "{{ certificate.owner | default(omit) }}"
@@ -107,7 +102,7 @@
     setype: "{{ certificate.setype | default(omit) }}"
 
 # If the key has been copied from locally, then this will have no effect
-- name: "{{ entity.name }} : Download Certificate"
+- name: "Download Certificate : {{ entity.name }}"
   fetch:
     src:  "{{ cert_file }}"
     dest: "{{ local_cert_file }}"
