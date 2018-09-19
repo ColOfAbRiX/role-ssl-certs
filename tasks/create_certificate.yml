@@ -101,6 +101,12 @@
     serole: "{{ certificate.serole | default(omit) }}"
     setype: "{{ certificate.setype | default(omit) }}"
 
+- name: "Trust Certificate : {{ entity.name }}"
+  include: trust.yml
+  vars:
+    trust_file: "{{ cert_file }}"
+  when: certificate.trust | default(False) | bool
+
 # If the key has been copied from locally, then this will have no effect
 - name: "Download Certificate : {{ entity.name }}"
   fetch:

@@ -11,11 +11,28 @@
   file: path="{{ key_file }}" state=absent
   when: entity.force_create | default(False) | bool
 
-- name: "Generate Key : {{ entity.name }}"
-  shell: openssl genrsa -out "{{ key_file }}" {{ private_key.bits }}
+
+- name: "Generate DSA Key : {{ entity.name }}"
+  command: openssl dsaparam -noout -out "{{ key_file }}" -genkey {{ private_key.bits }}
   args:
     creates: "{{ key_file }}"
-  register: private_key_creation
+  register: private_key_dsa_creation
+  when: private_key.type | default('rsa') == 'dsa'
+
+- name: "Generate RSA Key : {{ entity.name }}"
+  command: openssl genrsa -out "{{ key_file }}" {{ private_key.bits }}
+  args:
+    creates: "{{ key_file }}"
+  register: private_key_rsa_creation
+  when: private_key.type | default('rsa') == 'rsa'
+
+- name: "Generate ECDSA Key : {{ entity.name }}"
+  command: openssl ecparam -noout -name "{{ private_key.ec_curve }}" -genkey -param_enc explicit -out "{{ key_file }}"
+  args:
+    creates: "{{ key_file }}"
+  register: private_key_ecdsa_creation
+  when: private_key.type | default('rsa') == 'ecdsa'
+
 
 - name: "Key File Permissions : {{ entity.name }}"
   file:
@@ -33,5 +50,7 @@
     src:  "{{ key_file }}"
     dest: "{{ local_key_file }}"
     flat: yes
-  when: private_key.fetch | default(True) | bool and
-        private_key_creation | changed
+  when: private_key.fetch | default(True) | bool and (
+        private_key_rsa_creation | changed or
+        private_key_dsa_creation | changed or
+        private_key_ecdsa_creation | changed )

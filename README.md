@@ -1,14 +1,19 @@
 # ssl-certs
 
-Ansible role to create, install, trust and manage SSL Certificates.
+Ansible role to create, install, trust and manage [X.509 Certificates](1) (commonly known as SSL/TLC Certificates).
 
-The role can:
+The role:
 
- - create self-signed certificate, including Root Certification Authorities;
- - create signed certificates and full certificate chains;
- - install the certificates in a specific location on the target system;
- - trust globally the certificates.
- - use extended SSLv3 attributes.
+ - can create self-signed certificate, including Root Certification Authorities;
+ - can create signed certificates and full certificate chains;
+ - supports DSA, RSA and ECDSA keys;
+ - supports the encryption of the private key with a passphrase;
+ - can install the certificates in a specific location on the target system;
+ - can trust globally the certificates;
+ - can use extended SSLv3 attributes;
+ - can use the Ansible inventory to store the keys and certificates.
+
+[1]: https://www.wikiwand.com/en/X.509#/Certificates
 
 ## Requirements
 

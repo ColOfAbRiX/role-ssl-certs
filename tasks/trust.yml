@@ -1,0 +1,22 @@
+---
+
+- block:
+
+   - name: "Install Certificate on the System : {{ trust_file | basename }}"
+     copy:
+       src:    "{{ trust_file }}"
+       dest:   "/etc/pki/ca-trust/source/anchors/{{ trust_file | basename }}"
+       force:  yes
+       owner:  root
+       group:  root
+       mode:   '0644'
+       seuser: system_u
+       serole: object_r
+       setype: cert_t
+
+   - name: "Update RHEL/CentOS CA Store : {{ trust_file | basename }}"
+     command: update-ca-trust
+     async: 15
+     poll: 0
+
+  when: ansible_distribution in ['CentOS', 'RedHat']

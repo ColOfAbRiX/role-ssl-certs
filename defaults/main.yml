@@ -54,21 +54,29 @@ ssl_email:               admin@example.com
 # the other.
 ssl_sequence: []
 # # Root CA
-# - name: root_ca
-#   Custom paths that override the default working path for this key only.
-#   # If using custom paths, they must exist beforehand
-#   key_base:    /tmp/key
-#   csr_base:    /tmp/csr
-#   crt_base:    /tmp/crt
-#   # Definition of the private key
+# - name:          root_ca
+#   # This can be used to have the key definition but not using it
+#   enabled:       yes
+#   # Custom paths that override the default working path for this key only.
+#   # If using custom paths, they must exist beforehand.
+#   key_base:      /tmp/key
+#   csr_base:      /tmp/csr
+#   crt_base:      /tmp/crt
+#   # Definition of the private key (more options shown below too)
 #   key:
+#     # Crypto system: rsa, dsa, ecds
+#     type:                   rsa
+#     # Length of they key, applies to RSA and DSA key types
 #     bits:                   4096
-#   # Definition of the certificate
+#     # If using ECDSA, this is the name of the elliptic curve. The name can be
+#     # found using: openssl ecparam -list_curves
+#     #ec_curve:               secp521r1
+#   # Definition of the certificate (more options shown below too)
 #   certificate:
 #     self_signed:            yes
 #     common_name:            Root CA
 #     organizational_unit:    Example Security Office
-#     # Installs the certificate on the system
+#     # Installs the certificate on the system trust store
 #     trust:                  yes
 #     # SSL v3 extensions. Default is to omit these values
 #     basicConstraints:       'critical, CA:TRUE'
@@ -77,18 +85,18 @@ ssl_sequence: []
 #     keyUsage:               'critical, cRLSign, digitalSignature, keyCertSign'
 #
 # # Website signed certificate
-# - name: website
+# - name:          website
 #   # It forces the creation of a new key and certificate on the machine
-#   force_create: yes
+#   force_create:  yes
 #   # It gives priority to the key that is stored remotely versus the one stored
 #   # on the local repository
-#   force_remote: yes
+#   force_remote:  yes
 #   # If set to false, no operation will be performed
-#   enabled: yes
+#   enabled:       yes
 #   # Definition of the private key
 #   key:
 #     bits:                   2048
-#     # File modifiers, as per usual Ansible configuration
+#     # File modifiers, as per usual "file" Ansible module
 #     owner:                  nginx
 #     group:                  nginx
 #     # If set to no the file will not be stored locally
@@ -96,7 +104,7 @@ ssl_sequence: []
 #   # Definition of the certificate
 #   certificate:
 #     common_name:            "{{ ansible_fqdn }}"
-#     alt_names_dns:          ["internal.example.com"]
+#     alt_names_dns:          [ "internal.example.com" ]
 #     # Reference the above CA certificate
 #     signing_key:            root_ca
 #     digest:                 sha1
@@ -108,3 +116,20 @@ ssl_sequence: []
 #     subjectKeyIdentifier:   'hash'
 #     keyUsage:               'nonRepudiation, digitalSignature, keyEncipherment'
 #     extendedKeyUsage:       'clientAuth'
+#
+# # Certificate chain
+# - name:          website_chain
+#   chain:
+#     # File modifiers, as per usual "file" Ansible module
+#     owner:                  nginx
+#     group:                  nginx
+#     # If set to no the file will not be stored locally
+#     fetch:                  yes
+#     # Installs the certificate on the system trust store
+#     trust:                  yes
+#     # List of the certificate names that form the chain. The names are the names
+#     # used in the above certificates
+#     certificates:
+#      - root_ca
+#      - website
+#
