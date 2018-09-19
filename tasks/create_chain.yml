@@ -1,19 +1,16 @@
 ---
 
 - set_fact:
-   cert_reference: "{{ (ssl_sequence | selectattr('name', 'equalto', cert_in_chain)) | list }}"
+    certs_in_chain:      "{{ ssl_sequence | certificates_in_chain(chain.certificates | default([])) | list }}"
 
 - set_fact:
-   cert_in_chain_file: "{{ cert_reference.csr_base | default(ssl_certs_base.path) }}/{{ cert_reference.name }}.crt"
+    cert_files_in_chain: "{{ certs_in_chain | build_file_list((ssl_certs_base.path) }}"
 
-- name: "Add Certificate {{ cert_in_chain }} to Chain {{ chain.name }}"
-  lineinfile:
-    dest: /etc/fstab
-    regexp: "^/dev/sdb1 "
-    line: "{{ lookup('file', cert_in_chain_file) }}"
+- name: "Add Certificates to Chain : {{ entity.name }}"
+  shell: cat {{ cert_files_in_chain | join(' ') }} > {{ chain_file }}
 
 - name: "Trust Chain : {{ entity.name }}"
   include: trust.yml
   vars:
     trust_file: "{{ cert_file }}"
-  when: certificate.trust | default(False) | bool
+  when: chain.trust | default(False) | bool

@@ -9,6 +9,9 @@
     key_file:        "{{ entity.key_base | default(ssl_keys_base.path) }}/{{ entity.name }}.key"
     csr_file:        "{{ entity.csr_base | default(ssl_csr_base.path) }}/{{ entity.name }}.csr"
     cert_file:       "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}.crt"
+    chain_file:       "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}.crt"
+
+- set_fact:
     local_key_file:  "{{ entity.store_key_base | default(ssl_store_keys_base) }}/{{ entity.name }}.key"
     local_cert_file: "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}.crt"
 
@@ -19,8 +22,4 @@
   when: entity.certificate is defined
 
 - include: "create_chain.yml"
-  with_items:
-   - "{{ chain.certificates | default([]) }}"
   when: entity.chain is defined
-  loop_control:
-    loop_var: cert_in_chain
