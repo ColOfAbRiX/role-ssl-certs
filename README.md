@@ -2,16 +2,18 @@
 
 Ansible role to create, install, trust and manage [X.509 Certificates](1) (commonly known as SSL/TLC Certificates).
 
-The role:
+The are features of the ssl-certs role:
 
- - can create self-signed certificate, including Root Certification Authorities;
- - can create signed certificates and full certificate chains;
- - supports DSA, RSA and ECDSA keys;
- - supports the encryption of the private key with a passphrase;
- - can install the certificates in a specific location on the target system;
- - can trust globally the certificates;
- - can use extended SSLv3 attributes;
- - can use the Ansible inventory to store the keys and certificates.
+ - It can create self-signed certificate, including Root Certification Authorities.
+ - It can create signed certificates.
+ - It can create certificate chains.
+ - It supports DSA, RSA and ECDSA keys.
+ - It outputs keys and certificates in PEM format.
+ - It supports the encryption of the private key with a passphrase.
+ - It can install the certificates in a specific location on the target system.
+ - It can trust globally the certificates.
+ - It can use extended SSLv3 attributes.
+ - It can use the Ansible inventory to store the keys and certificates.
 
 [1]: https://www.wikiwand.com/en/X.509#/Certificates
 
@@ -20,6 +22,12 @@ The role:
 The role requires RHEL/CentOS 7 to work. The creation of certificate most probably works on other platforms but it hasn't been tested and the role has been locked for RHEL/CentOS only.
 
 OpenSSL is also required to be installed on the target system.
+
+# Description
+
+The role works by using the `ssl_sequence` list of dictionaries as a sequence of elements to create. It will process each entry one at the time and for each one of them it will examine the `key`, `certificate` and `chain` elements one at the time and create these elements.
+
+The [default configuration](defaults/main.yml) file contains a fully working example of how the role can be used to create a root CA, a certificate signed by that CA and a certificate chain.
 
 ## Role Variables
 

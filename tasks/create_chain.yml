@@ -1,16 +1,47 @@
 ---
 
-- set_fact:
-    certs_in_chain:      "{{ ssl_sequence | certificates_in_chain(chain.certificates | default([])) | list }}"
+- name: "set_fact : create_chain.yml : {{ entity.name }}"
+  set_fact:
+    certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
 
-- set_fact:
-    cert_files_in_chain: "{{ certs_in_chain | build_file_list((ssl_certs_base.path) }}"
+- name: "Copy Local Chain : {{ entity.name }}"
+  copy:
+    src:  "{{ local_chain_file }}"
+    dest: "{{ chain_file }}"
+  when: not entity.force_remote | default(False) | bool
+  ignore_errors: yes
 
-- name: "Add Certificates to Chain : {{ entity.name }}"
-  shell: cat {{ cert_files_in_chain | join(' ') }} > {{ chain_file }}
+- name: "Force Creation of the Chain : {{ entity.name }}"
+  file: path="{{ chain_file }}" state=absent
+  when: entity.force_create | default(False) | bool
+
+- name: "Create Certificate Chain : {{ entity.name }}"
+  shell: cat {{ certs_files_in_chain | join(' ') }} > "{{ chain_file }}"
+  args:
+    creates: "{{ chain_file }}"
+  register: chain_creation
+
+- name: "Chain File Permissions : {{ entity.name }}"
+  file:
+    path:   "{{ chain_file }}"
+    owner:  "{{ chain.owner | default(omit) }}"
+    group:  "{{ chain.group | default(omit) }}"
+    mode:   "{{ chain.mode | default('0644') }}"
+    seuser: "{{ chain.seuser | default(omit) }}"
+    serole: "{{ chain.serole | default(omit) }}"
+    setype: "{{ chain.setype | default(omit) }}"
 
 - name: "Trust Chain : {{ entity.name }}"
   include: trust.yml
   vars:
-    trust_file: "{{ cert_file }}"
+    trust_file: "{{ chain_file }}"
   when: chain.trust | default(False) | bool
+
+# If the chain has been copied from locally, then this will have no effect
+- name: "Download chain : {{ entity.name }}"
+  fetch:
+    src:  "{{ chain_file }}"
+    dest: "{{ local_chain_file }}"
+    flat: yes
+  when: chain.fetch | default(True) | bool and
+        chain_creation | changed

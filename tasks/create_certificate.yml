@@ -1,6 +1,6 @@
 ---
 
-- name: "Set Facts : {{ entity.name }}"
+- name: "set_fact : create_certificate.yml : {{ entity.name }}"
   set_fact:
     cert_subj_country:  "{{ certificate.country | default(ssl_country) }}"
     cert_subj_email:    "{{ certificate.email | default(ssl_email) }}"
@@ -59,7 +59,7 @@
 
    - set_fact:
        signing_key_file: "{{ signing_key.base_path | default(ssl_keys_base.path) }}/{{ signing_key.name }}.key"
-       signing_crt_file: "{{ signing_key.csr_base | default(ssl_certs_base.path) }}/{{ signing_key.name }}.crt"
+       signing_crt_file: "{{ signing_key.crt_base | default(ssl_certs_base.path) }}/{{ signing_key.name }}.crt"
 
    - name: "Generate Certificate Signing Request : {{ entity.name }}"
      shell: |
@@ -107,7 +107,7 @@
     trust_file: "{{ cert_file }}"
   when: certificate.trust | default(False) | bool
 
-# If the key has been copied from locally, then this will have no effect
+# If the certificate has been copied from locally, then this will have no effect
 - name: "Download Certificate : {{ entity.name }}"
   fetch:
     src:  "{{ cert_file }}"
