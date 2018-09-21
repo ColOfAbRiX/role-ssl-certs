@@ -9,6 +9,11 @@
     cert_subj_org_unit: "{{ certificate.organizational_unit | default(ssl_organizational_unit) }}"
     cert_subj_state:    "{{ certificate.state | default(ssl_state) }}"
 
+- name: "set_fact : create_certificate.yml : {{ entity.name }}"
+  set_fact:
+    key_has_pass:       "{{ private_key.encryption | default('') != '' }}"
+    key_pass:           "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
+
 
 - name: "Use Custom Configuration File : {{ entity.name }}"
   template:
@@ -41,12 +46,15 @@
       -config /tmp/openssl.cnf \
       -new \
       -x509 \
+      {% if key_has_pass %}-passin env:openssl_passphrase{% endif %}\
       -{{ certificate.digest | default('sha256') }} \
       -key {{ key_file }} \
       -days {{ certificate.days | default(30) }} \
       -out "{{ cert_file }}"
   args:
     creates: "{{ cert_file }}"
+  environment:
+    openssl_passphrase: "{{ key_pass }}"
   register: ss_certificate_creation
   when: certificate.self_signed | default(False) | bool
 
@@ -54,22 +62,29 @@
 
 - block:
 
-   - set_fact:
-       signing_key: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
+   - name: "set_fact : create_certificate.yml : {{ entity.name }}"
+     set_fact:
+       signing_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
 
-   - set_fact:
-       signing_key_file: "{{ signing_key.base_path | default(ssl_keys_base.path) }}/{{ signing_key.name }}.key"
-       signing_crt_file: "{{ signing_key.crt_base | default(ssl_certs_base.path) }}/{{ signing_key.name }}.crt"
+   - name: "set_fact : create_certificate.yml : {{ entity.name }}"
+     set_fact:
+       signing_key_file:     "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
+       signing_crt_file:     "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
+       signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
+       signing_key_pass:     "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
 
    - name: "Generate Certificate Signing Request : {{ entity.name }}"
      shell: |
        openssl req \
          -config /tmp/openssl.cnf \
          -new \
+         {% if key_has_pass %}-passin env:openssl_passphrase{% endif %}\
          -key {{ key_file }} \
          -out "{{ csr_file }}"
      args:
        creates: "{{ cert_file }}"
+     environment:
+       openssl_passphrase: "{{ key_pass }}"
 
    - name: "Sign CSR and Generate Certificate : {{ entity.name }}"
      shell: |
@@ -83,9 +98,12 @@
          -CAkey "{{ signing_key_file }}" \
          -CA "{{ signing_crt_file }}" \
          -CAcreateserial \
+         {% if signing_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
          -out "{{ cert_file }}"
      args:
        creates: "{{ cert_file }}"
+     environment:
+       openssl_passphrase: "{{ signing_key_pass }}"
      register: certificate_creation
 
   when: not certificate.self_signed | default(False) | bool

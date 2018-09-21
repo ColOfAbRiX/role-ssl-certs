@@ -27,6 +27,10 @@ OpenSSL is also required to be installed on the target system.
 
 The role works by using the `ssl_sequence` list of dictionaries as a sequence of elements to create. It will process each entry one at the time and for each one of them it will examine the `key`, `certificate` and `chain` elements one at the time and create these elements.
 
+The role can use the Ansible local code to store all the produced certificates and key such that Ansible becomes the single and main source of all data. This use can be turned off using configuration variables.
+
+**NOTE:** All private keys kept in the repository must be encrypted with Ansible vault.
+
 The [default configuration](defaults/main.yml) file contains a fully working example of how the role can be used to create a root CA, a certificate signed by that CA and a certificate chain.
 
 ## Role Variables

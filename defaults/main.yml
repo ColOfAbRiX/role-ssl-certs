@@ -53,12 +53,19 @@ ssl_sequence: []
 #     # If using ECDSA, this is the name of the elliptic curve. The name can be
 #     # found using: openssl ecparam -list_curves
 #     ec_curve:            prime256v1
+#     # If set to a cipher it encrypts the key. See openssl for the list of
+#     # supported algorithms.
+#     encryption:          aes256
+#     # The passphrase to use to encrypt the key
+#     passphrase:          Passw0rd
 #   # Definition of the certificate (more options shown below too)
 #   certificate:
 #     # This indicates that the certificate is to be self-signed
 #     self_signed:         yes
 #     common_name:         My website root Certificate Authority
 #     organizational_unit: Example Security Office
+#     # Days of validity. Default is 30
+#     days:                1000
 #     # Installs the certificate on the system trust store
 #     trust:               yes
 #     # SSL v3 extensions. Default is to omit these values
@@ -97,9 +104,8 @@ ssl_sequence: []
 #     #alt_names_ips:       [ "{{ ansible_default_ipv4.address }}" ]
 #     # Reference the name of the signing CA certificate
 #     signing_key:         root_ca
-#     # Digest algorithm. It defaults to sha256
+#     # Digest algorithm, defaults to sha256
 #     digest:              sha1
-#     days:                90
 #     #owner:               nginx
 #     #group:               nginx
 #     # SSL v3 extensions. Default is to omit these values

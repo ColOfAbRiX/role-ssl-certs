@@ -1,5 +1,10 @@
 ---
 
+- name: "set_fact : create_private_key.yml : {{ entity.name }}"
+  set_fact:
+    key_has_pass: "{{ private_key.encryption | default('') != '' }}"
+    key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
+
 - name: "Copy Local Key : {{ entity.name }}"
   copy:
     src:  "{{ local_key_file }}"
@@ -12,27 +17,72 @@
   when: entity.force_create | default(False) | bool
 
 
-- name: "Generate DSA Key : {{ entity.name }}"
-  command: openssl dsaparam -noout -out "{{ key_file }}" -genkey {{ private_key.bits }}
-  args:
-    creates: "{{ key_file }}"
-  register: private_key_dsa_creation
+- block:
+
+   - name: "Generate DSA Key : {{ entity.name }}"
+     shell: |
+       openssl dsaparam \
+         -noout \
+         -out "{{ key_file }}" \
+         -genkey \
+         {{ private_key.bits }}
+     args:
+       creates: "{{ key_file }}"
+     register: private_key_dsa_creation
+
+   - name: "Add Passphrase to DSA Key : {{ entity.name }}"
+     shell: |
+       openssl dsa \
+         -{{ private_key.encryption }} \
+         -passout env:openssl_passphrase \
+         -in "{{ key_file }}" \
+         -out "{{ key_file }}"
+     environment:
+       openssl_passphrase: "{{ key_pass }}"
+     when: key_has_pass
+
   when: private_key.type | default('rsa') == 'dsa'
 
 - name: "Generate RSA Key : {{ entity.name }}"
-  command: openssl genrsa -out "{{ key_file }}" {{ private_key.bits }}
+  shell: |
+    openssl genrsa \
+      {% if key_has_pass %}-{{ private_key.encryption }} \
+      -passout env:openssl_passphrase{% endif %}
+      -out "{{ key_file }}" \
+      {{ private_key.bits }}
   args:
     creates: "{{ key_file }}"
+  environment:
+    openssl_passphrase: "{{ key_pass }}"
   register: private_key_rsa_creation
   when: private_key.type | default('rsa') == 'rsa'
 
-- name: "Generate ECDSA Key : {{ entity.name }}"
-  command: openssl ecparam -noout -name "{{ private_key.ec_curve }}" -genkey -param_enc explicit -out "{{ key_file }}"
-  args:
-    creates: "{{ key_file }}"
-  register: private_key_ecdsa_creation
-  when: private_key.type | default('rsa') == 'ecdsa'
+- block:
 
+   - name: "Generate ECDSA Key : {{ entity.name }}"
+     shell: |
+       openssl ecparam \
+         -noout \
+         -name "{{ private_key.ec_curve }}" \
+         -genkey \
+         -param_enc explicit \
+         -out "{{ key_file }}"
+     args:
+       creates: "{{ key_file }}"
+     register: private_key_ecdsa_creation
+
+   - name: "Add Passphrase to ECDSA Key : {{ entity.name }}"
+     shell: |
+       openssl ec \
+         -{{ private_key.encryption }} \
+         -passout env:openssl_passphrase \
+         -in "{{ key_file }}" \
+         -out "{{ key_file }}"
+     environment:
+       openssl_passphrase: "{{ key_pass }}"
+     when: key_has_pass
+
+  when: private_key.type | default('rsa') == 'ecdsa'
 
 - name: "Key File Permissions : {{ entity.name }}"
   file:

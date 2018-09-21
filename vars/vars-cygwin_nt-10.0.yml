@@ -1,0 +1,4 @@
+---
+
+# On cygwin the dependencies must be installed manually
+ssl_packages_dependencies: []
