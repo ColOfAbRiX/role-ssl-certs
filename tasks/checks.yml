@@ -1,0 +1,9 @@
+---
+
+- set_fact:
+    ssl_sequence_names: "{{ ssl_sequence | default([]) | map(attribute='name') | list }}"
+
+- name: "Check Uniqueness of Names"
+  assert:
+    msg:  "The names of the entries in ssl_sequence must be unique."
+    that: ssl_sequence_names | count == ssl_sequence_names | unique | count

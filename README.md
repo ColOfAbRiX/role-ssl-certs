@@ -1,17 +1,18 @@
 # ssl-certs
 
-Ansible role to create, install, trust and manage [X.509 Certificates](1) (commonly known as SSL/TLC Certificates).
+Ansible role to create, install, trust and manage [X.509 Certificates](1) (commonly known as SSL/TLS Certificates).
 
-The are features of the ssl-certs role:
+These are the features of the ssl-certs role:
 
- - It can create self-signed certificate, including Root Certification Authorities.
- - It can create signed certificates.
- - It can create certificate chains.
+ - It can create self-signed certificates, including Root Certification Authorities.
+ - It can create signed certificates from existing or new CA.
+ - It can create certificate chains files.
+ - If you have existing certificates this role can use them.
  - It supports DSA, RSA and ECDSA keys.
  - It outputs keys and certificates in PEM format.
  - It supports the encryption of the private key with a passphrase.
  - It can install the certificates in a specific location on the target system.
- - It can trust globally the certificates.
+ - It can trust globally the certificates (OS dependent).
  - It can use extended SSLv3 attributes.
  - It can use the Ansible inventory to store the keys and certificates.
 
@@ -19,9 +20,9 @@ The are features of the ssl-certs role:
 
 ## Requirements
 
-The role requires RHEL/CentOS 7 to work. The creation of certificate most probably works on other platforms but it hasn't been tested and the role has been locked for RHEL/CentOS only.
+The role only requires OpenSSL installed on the system.
 
-OpenSSL is also required to be installed on the target system.
+The global trusting of the certificate requires CentOS/RedHat 7.
 
 # Description
 
@@ -29,9 +30,9 @@ The role works by using the `ssl_sequence` list of dictionaries as a sequence of
 
 The role can use the Ansible local code to store all the produced certificates and key such that Ansible becomes the single and main source of all data. This use can be turned off using configuration variables.
 
-**NOTE:** All private keys kept in the repository must be encrypted with Ansible vault.
+**NOTE:** All private keys that are kept in the repository must be encrypted with Ansible vault.
 
-The [default configuration](defaults/main.yml) file contains a fully working example of how the role can be used to create a root CA, a certificate signed by that CA and a certificate chain.
+The [default configuration](defaults/main.yml) file contains a fully working example of how the role can be used to create a root CA, a certificate signed by that CA and a certificate chain with the description of all the options.
 
 ## Role Variables
 

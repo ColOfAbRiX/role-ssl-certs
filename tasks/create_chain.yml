@@ -4,7 +4,7 @@
   set_fact:
     certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
 
-- name: "Copy Local Chain : {{ entity.name }}"
+- name: "Copy Local Chain to Target : {{ entity.name }}"
   copy:
     src:  "{{ local_chain_file }}"
     dest: "{{ chain_file }}"
@@ -38,7 +38,7 @@
   when: chain.trust | default(False) | bool
 
 # If the chain has been copied from locally, then this will have no effect
-- name: "Download chain : {{ entity.name }}"
+- name: "Download Chain from Target : {{ entity.name }}"
   fetch:
     src:  "{{ chain_file }}"
     dest: "{{ local_chain_file }}"

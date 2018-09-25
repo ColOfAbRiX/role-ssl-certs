@@ -12,16 +12,18 @@ def cert_files_in_chain(values, certs_list, base_path=""):
     """
     result = []
 
-    for entry in values:
+    for cert_name in certs_list:
         # To accept an entry it must contain a certificate definition and its
         # name must be in the certs_list
-        if 'certificate' in entry and entry['name'] in certs_list:
-            cert_file = "%s/%s.%s" % (
-                entry.get('crt_base', base_path),
-                entry['name'],
-                'crt'
-            )
-            result.append(cert_file)
+        cert_entries = filter(
+            lambda c: 'certificate' in c and c['name'] == cert_name,
+            values
+        )
+        cert_entries = map(
+            lambda c: "%s/%s.%s" % (c.get('crt_base', base_path), c['name'], 'crt'),
+            cert_entries
+        )
+        result.extend(cert_entries)
 
     return result
 

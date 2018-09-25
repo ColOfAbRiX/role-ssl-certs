@@ -22,7 +22,7 @@
     mode:   '0644'
   changed_when: false
 
-- name: "Copy Local Certificate : {{ entity.name }}"
+- name: "Copy Local Certificate to Target: {{ entity.name }}"
   copy:
     src:  "{{ local_cert_file }}"
     dest: "{{ cert_file }}"
@@ -126,7 +126,7 @@
   when: certificate.trust | default(False) | bool
 
 # If the certificate has been copied from locally, then this will have no effect
-- name: "Download Certificate : {{ entity.name }}"
+- name: "Download Certificate from Target : {{ entity.name }}"
   fetch:
     src:  "{{ cert_file }}"
     dest: "{{ local_cert_file }}"

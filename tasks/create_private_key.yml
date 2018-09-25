@@ -5,7 +5,7 @@
     key_has_pass: "{{ private_key.encryption | default('') != '' }}"
     key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
 
-- name: "Copy Local Key : {{ entity.name }}"
+- name: "Copy Local Key to Target : {{ entity.name }}"
   copy:
     src:  "{{ local_key_file }}"
     dest: "{{ key_file }}"
@@ -39,7 +39,8 @@
          -out "{{ key_file }}"
      environment:
        openssl_passphrase: "{{ key_pass }}"
-     when: key_has_pass
+     when: private_key_dsa_creation | changed and
+           key_has_pass
 
   when: private_key.type | default('rsa') == 'dsa'
 
@@ -80,7 +81,8 @@
          -out "{{ key_file }}"
      environment:
        openssl_passphrase: "{{ key_pass }}"
-     when: key_has_pass
+     when: private_key_ecdsa_creation | changed and
+           key_has_pass
 
   when: private_key.type | default('rsa') == 'ecdsa'
 
@@ -95,7 +97,7 @@
     setype: "{{ private_key.setype | default(omit) }}"
 
 # If the key has been copied from locally, then this will have no effect
-- name: "Download Key : {{ entity.name }}"
+- name: "Download Key from Target : {{ entity.name }}"
   fetch:
     src:  "{{ key_file }}"
     dest: "{{ local_key_file }}"
