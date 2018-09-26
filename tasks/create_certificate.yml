@@ -27,6 +27,7 @@
     src:  "{{ local_cert_file }}"
     dest: "{{ cert_file }}"
   when: not entity.force_remote | default(False) | bool
+  register: certificate_copied_from_local
   ignore_errors: yes
 
 - name: "Force Creation of the Certificate : {{ entity.name }}"
@@ -131,5 +132,8 @@
     src:  "{{ cert_file }}"
     dest: "{{ local_cert_file }}"
     flat: yes
-  when: certificate.fetch | default(True) | bool and
-        (certificate_creation | changed or ss_certificate_creation | changed)
+  when: certificate.fetch | default(True) | bool and (
+          certificate_copied_from_local | failed or
+          certificate_creation | changed or
+          ss_certificate_creation | changed
+        )

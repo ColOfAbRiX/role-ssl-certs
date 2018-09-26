@@ -9,6 +9,7 @@
     src:  "{{ local_chain_file }}"
     dest: "{{ chain_file }}"
   when: not entity.force_remote | default(False) | bool
+  register: chain_copied_from_local
   ignore_errors: yes
 
 - name: "Force Creation of the Chain : {{ entity.name }}"
@@ -43,5 +44,7 @@
     src:  "{{ chain_file }}"
     dest: "{{ local_chain_file }}"
     flat: yes
-  when: chain.fetch | default(True) | bool and
-        chain_creation | changed
+  when: chain.fetch | default(True) | bool and (
+          chain_copied_from_local | failed or
+          chain_creation | changed
+        )
