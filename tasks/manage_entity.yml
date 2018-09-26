@@ -26,4 +26,5 @@
   when: entity.certificate is defined
 
 - include: "create_chain.yml"
-  when: entity.chain is defined
+  when: entity.chain is defined and
+        entity.chain.certificates | default([]) | length > 0

@@ -119,6 +119,8 @@ ssl_sequence: []
 #     subjectKeyIdentifier: 'hash'
 #     keyUsage:            'nonRepudiation,digitalSignature,keyEncipherment'
 #     extendedKeyUsage:    'clientAuth'
+#     # If set to no the file will not be stored locally
+#     fetch:               no
 #
 # # Certificate chain
 # - name:          website_chain
@@ -136,6 +138,8 @@ ssl_sequence: []
 #     # List of the certificate names that form the chain. The names are the
 #     # names used in the above certificates. The output chain will contain the
 #     # certificates in the order that they appear here.
+#     # If set to yes the file will be stored locally
+#     fetch:               yes
 #     certificates:
 #      - website
 #      - root_ca

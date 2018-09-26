@@ -10,7 +10,7 @@
 default_bits         = 2048
 distinguished_name   = req-distinguished_name
 x509_extensions      = req-x509_extensions
-req_extensions       = v3_req
+req_extensions       = req-req_extensions
 prompt               = no
 
 # The section containing the distinguished name fields to prompt for when
@@ -37,7 +37,7 @@ subjectAltName       = @alt_names
 
 # The configuration file section containing a list of extensions to add to the
 # certificate request.
-[ v3_req ]
+[ req-req_extensions ]
 {{ write_attribute('basicConstraints') }}
 {{ write_attribute('subjectKeyIdentifier') }}
 {{ write_attribute('keyUsage') }}

@@ -7,3 +7,9 @@
   assert:
     msg:  "The names of the entries in ssl_sequence must be unique."
     that: ssl_sequence_names | count == ssl_sequence_names | unique | count
+
+#
+# TODO: More to check:
+#  - That all certificates reference existing previous entry as signing key
+#  - That all chains reference existing previous entries as certificates
+#

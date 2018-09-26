@@ -92,7 +92,7 @@
        openssl x509 \
          -req \
          -extfile /tmp/openssl.cnf \
-         -extensions v3_req \
+         -extensions req-req_extensions \
          -{{ certificate.digest | default('sha256') }} \
          -days {{ certificate.days | default(30) }} \
          -in "{{ csr_file }}" \
