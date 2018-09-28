@@ -4,17 +4,22 @@
   set_fact:
     certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
 
+- name: "set_fact : create_chain.yml : {{ entity.name }}"
+  set_fact:
+    force_remote:        "{{ chain.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:        "{{ chain.force_create | default(entity.force_create | default(False)) | bool }}"
+
 - name: "Copy Local Chain to Target : {{ entity.name }}"
   copy:
     src:  "{{ local_chain_file }}"
     dest: "{{ chain_file }}"
-  when: not entity.force_remote | default(False) | bool
+  when: not force_remote
   register: chain_copied_from_local
   ignore_errors: yes
 
 - name: "Force Creation of the Chain : {{ entity.name }}"
   file: path="{{ chain_file }}" state=absent
-  when: entity.force_create | default(False) | bool
+  when: force_create
 
 - name: "Create Certificate Chain : {{ entity.name }}"
   shell: cat {{ certs_files_in_chain | join(' ') }} > "{{ chain_file }}"

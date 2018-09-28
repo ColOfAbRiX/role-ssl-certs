@@ -101,6 +101,9 @@ ssl_sequence: []
 #     #group:               nginx
 #     # If set to no the file will not be stored locally
 #     fetch:               no
+#     # Both force_create and force_remote can be specified also at "key",
+#     # "certificate" and "chain" level to override the entity ones
+#     force_create: no
 #   # Definition of the certificate
 #   certificate:
 #     common_name:         "{{ ansible_fqdn }}"
@@ -137,9 +140,41 @@ ssl_sequence: []
 #     trust:               yes
 #     # List of the certificate names that form the chain. The names are the
 #     # names used in the above certificates. The output chain will contain the
-#     # certificates in the order that they appear here.
+#     # certificates in the order that they appear here. The order on which the
+#     # certificates appear is important as stated in RFC4346 Section 7.4.2
 #     # If set to yes the file will be stored locally
 #     fetch:               yes
 #     certificates:
 #      - website
 #      - root_ca
+
+# # Example of a client certificate, created in one entity, with a chain file.
+# - name:          client_certificate
+#   key:
+#     type:                rsa
+#     bits:                4096
+#   certificate:
+#     days:                730
+#     common_name:         John Smith <johnsmith@example.com>
+#     # Certificate details can be changed here. Valid keys mimic the ssl_*
+#     # equivalents of the upper level variables.
+#     email:               johnsmith@example.com
+#     country:             GI
+#     state:               Gibraltar
+#     location:            Gibraltar
+#     signing_key:         root_ca
+#     digest:              sha256
+#     # We restrict the key usage for a specific purpose
+#     keyUsage:            nonRepudiation,digitalSignature,keyEncipherment
+#     basicConstraints:    'CA:FALSE'
+#     extendedKeyUsage:    clientAuth
+#     subjectKeyIdentifier: hash
+#   chain:
+#     # Force the update of the chain
+#     force_create: yes
+#     # A chain can be included together with a Key and Certificate. The chain
+#     # will be named appending -chain.crt to the file.
+#     certificates:
+#      - client_certificate
+#      - root_ca
+#

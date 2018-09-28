@@ -13,7 +13,8 @@
   set_fact:
     key_has_pass:       "{{ private_key.encryption | default('') != '' }}"
     key_pass:           "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
-
+    force_remote:       "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:       "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Use Custom Configuration File : {{ entity.name }}"
   template:
@@ -26,7 +27,7 @@
   copy:
     src:  "{{ local_cert_file }}"
     dest: "{{ cert_file }}"
-  when: not entity.force_remote | default(False) | bool
+  when: not force_remote
   register: certificate_copied_from_local
   ignore_errors: yes
 
@@ -34,7 +35,7 @@
   file:
     path: "{{ item }}"
     state: absent
-  when: entity.force_create | default(False) | bool
+  when: force_create
   with_items:
    - "{{ csr_file }}"
    - "{{ cert_file }}"

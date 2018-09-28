@@ -10,6 +10,7 @@
 
 #
 # TODO: More to check:
+#  - That only signing_key or self_signed attributes are present in certificates
 #  - That all certificates reference existing previous entry as signing key
 #  - That all chains reference existing previous entries as certificates
 #

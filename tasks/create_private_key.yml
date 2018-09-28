@@ -4,18 +4,20 @@
   set_fact:
     key_has_pass: "{{ private_key.encryption | default('') != '' }}"
     key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
+    force_remote: "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create: "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Copy Local Key to Target : {{ entity.name }}"
   copy:
     src:  "{{ local_key_file }}"
     dest: "{{ key_file }}"
-  when: not entity.force_remote | default(False) | bool
+  when: not force_remote
   register: private_key_copied_from_local
   ignore_errors: yes
 
 - name: "Force Creation of the Key : {{ entity.name }}"
   file: path="{{ key_file }}" state=absent
-  when: entity.force_create | default(False) | bool
+  when: force_create
 
 
 - block:
