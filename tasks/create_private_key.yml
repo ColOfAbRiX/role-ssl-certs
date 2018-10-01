@@ -69,7 +69,6 @@
          -noout \
          -name "{{ private_key.ec_curve }}" \
          -genkey \
-         -param_enc explicit \
          -out "{{ key_file }}"
      args:
        creates: "{{ key_file }}"
