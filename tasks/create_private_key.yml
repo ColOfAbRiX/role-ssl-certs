@@ -20,6 +20,8 @@
   when: force_create
 
 
+##  DSA Key  ##
+
 - block:
 
    - name: "Generate DSA Key : {{ entity.name }}"
@@ -47,6 +49,8 @@
 
   when: private_key.type | default('rsa') == 'dsa'
 
+##  RSA Key  ##
+
 - name: "Generate RSA Key : {{ entity.name }}"
   shell: |
     openssl genrsa \
@@ -60,6 +64,8 @@
     openssl_passphrase: "{{ key_pass }}"
   register: private_key_rsa_creation
   when: private_key.type | default('rsa') == 'rsa'
+
+##  ECDSA Key  ##
 
 - block:
 
@@ -87,6 +93,7 @@
            key_has_pass
 
   when: private_key.type | default('rsa') == 'ecdsa'
+
 
 - name: "Key File Permissions : {{ entity.name }}"
   file:

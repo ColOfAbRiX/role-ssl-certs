@@ -1,22 +1,27 @@
 ---
 
+# Find the entity that has the private key used to generate the certificate
 - name: "set_fact : create_certificate.yml : {{ entity.name }}"
   set_fact:
-    cert_subj_country:  "{{ certificate.country | default(ssl_country) }}"
-    cert_subj_email:    "{{ certificate.email | default(ssl_email) }}"
-    cert_subj_location: "{{ certificate.location | default(ssl_location) }}"
-    cert_subj_org:      "{{ certificate.organization | default(ssl_organization) }}"
-    cert_subj_org_unit: "{{ certificate.organizational_unit | default(ssl_organizational_unit) }}"
-    cert_subj_state:    "{{ certificate.state | default(ssl_state) }}"
+    generating_entity:       "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
 
+# Data about the generating key is built for subsequent use
 - name: "set_fact : create_certificate.yml : {{ entity.name }}"
   set_fact:
-    key_has_pass:       "{{ private_key.encryption | default('') != '' }}"
-    key_pass:           "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
-    force_remote:       "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create:       "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+    generating_key_file:     "{{ generating_entity.base_path | default(ssl_keys_base.path) }}/{{ generating_entity.name }}.key"
+    generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
+    generating_key_pass:     "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
+    force_remote:            "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:            "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
 
-- name: "Use Custom Configuration File : {{ entity.name }}"
+- name: "Set OpenSSL Configuration File : {{ entity.name }}"
+  vars:
+    cert_subj_country:        "{{ certificate.country | default(ssl_country) }}"
+    cert_subj_email:          "{{ certificate.email | default(ssl_email) }}"
+    cert_subj_location:       "{{ certificate.location | default(ssl_location) }}"
+    cert_subj_org:            "{{ certificate.organization | default(ssl_organization) }}"
+    cert_subj_org_unit:       "{{ certificate.organizational_unit | default(ssl_organizational_unit) }}"
+    cert_subj_state:          "{{ certificate.state | default(ssl_state) }}"
   template:
     src:    tmp/openssl.cnf.j2
     dest:   /tmp/openssl.cnf
@@ -40,6 +45,7 @@
    - "{{ csr_file }}"
    - "{{ cert_file }}"
 
+
 ## Self Signed Certificate ##
 
 - name: "Generate Self Signed Certificate : {{ entity.name }}"
@@ -48,45 +54,52 @@
       -config /tmp/openssl.cnf \
       -new \
       -x509 \
-      {% if key_has_pass %}-passin env:openssl_passphrase{% endif %}\
+      {% if generating_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
       -{{ certificate.digest | default('sha256') }} \
-      -key {{ key_file }} \
+      -key {{ generating_key_file }} \
       -days {{ certificate.days | default(30) }} \
       -out "{{ cert_file }}"
   args:
     creates: "{{ cert_file }}"
   environment:
-    openssl_passphrase: "{{ key_pass }}"
+    openssl_passphrase: "{{ generating_key_pass }}"
   register: ss_certificate_creation
   when: certificate.self_signed | default(False) | bool
 
 ## Full Certificate ##
 
+# The CSR is create regardless of having a signing key to allow for manual
+# processing
+- name: "Generate Certificate Signing Request : {{ entity.name }}"
+  shell: |
+    openssl req \
+      -config /tmp/openssl.cnf \
+      -new \
+      {% if generating_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
+      -key {{ generating_key_file }} \
+      -out "{{ csr_file }}"
+  args:
+    creates: "{{ cert_file }}"
+  environment:
+    openssl_passphrase: "{{ generating_key_pass }}"
+  when: not certificate.self_signed | default(False) | bool
+
+# This block is executed only if we want to complete the creation of the
+# certificate with a key we already have
 - block:
 
+   # Find the entity that has the private key used to sign the certificate
    - name: "set_fact : create_certificate.yml : {{ entity.name }}"
      set_fact:
        signing_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
 
+   # Data about the signing key is built for subsequent use
    - name: "set_fact : create_certificate.yml : {{ entity.name }}"
      set_fact:
        signing_key_file:     "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
        signing_crt_file:     "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
        signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
        signing_key_pass:     "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
-
-   - name: "Generate Certificate Signing Request : {{ entity.name }}"
-     shell: |
-       openssl req \
-         -config /tmp/openssl.cnf \
-         -new \
-         {% if key_has_pass %}-passin env:openssl_passphrase{% endif %}\
-         -key {{ key_file }} \
-         -out "{{ csr_file }}"
-     args:
-       creates: "{{ cert_file }}"
-     environment:
-       openssl_passphrase: "{{ key_pass }}"
 
    - name: "Sign CSR and Generate Certificate : {{ entity.name }}"
      shell: |
@@ -108,7 +121,8 @@
        openssl_passphrase: "{{ signing_key_pass }}"
      register: certificate_creation
 
-  when: not certificate.self_signed | default(False) | bool
+  when: not certificate.self_signed | default(False) | bool and
+        certificate.signing_key | default('') != ''
 
 
 - name: "Certificate File Permissions : {{ entity.name }}"

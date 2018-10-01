@@ -2,19 +2,21 @@
 
 Ansible role to create, install, trust and manage [X.509 Certificates](1) (commonly known as SSL/TLS Certificates).
 
-These are the features of the ssl-certs role:
+The role tries to be flexible and generic and doesn't want to impose opinionated views on how to manage your PKI. The role has been designed to work as a pipeline and to support as many features as possible and to uniform the way the PKI is created. These are the features of the ssl-certs role:
 
  - It can create self-signed certificates, including Root Certification Authorities.
- - It can create signed certificates from existing or new CA.
- - It can create certificate chains files.
- - If you have existing certificates this role can use them.
  - It supports DSA, RSA and ECDSA keys.
- - It outputs keys and certificates in PEM format.
+ - It outputs keys and certificates in PEM format (more formats to come).
  - It supports the encryption of the private key with a passphrase.
+ - It can create signed certificates from existing or new CA.
+ - Or it can just stop at the CSR create and later installation of a certificate.
+ - It can create certificate chain files.
+ - It can generate multiple certificates with the same private key.
+ - If you have existing certificates this role can use them.
  - It can install the certificates in a specific location on the target system.
- - It can trust globally the certificates (OS dependent).
+ - And it can use a local path to store the keys and certificates.
+ - It can install the certificates on trust stores (OS dependent).
  - It can use extended SSLv3 attributes.
- - It can use the Ansible inventory to store the keys and certificates.
 
 ## Requirements
 

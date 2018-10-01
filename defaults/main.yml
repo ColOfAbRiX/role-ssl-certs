@@ -66,7 +66,9 @@ ssl_sequence: []
 #     passphrase:          Passw0rd
 #   # Definition of the certificate (more options shown below too)
 #   certificate:
-#     # This indicates that the certificate is to be self-signed
+#     # This indicates that the certificate is to be self-signed. If both this
+#     # option and the "signing_key" option are missing then only the CSR
+#     # is generated.
 #     self_signed:         yes
 #     common_name:         My website root Certificate Authority
 #     organizational_unit: Example Security Office
@@ -111,7 +113,8 @@ ssl_sequence: []
 #     alt_names_dns:       [ internal.example.com ]
 #     # For alternative IP addresses
 #     #alt_names_ips:       [ "{{ ansible_default_ipv4.address }}" ]
-#     # Reference the name of the signing CA certificate
+#     # Reference the name of the signing CA certificate. If both this option
+#     # and the "signing_key" option are missing then only the CSR is generated.
 #     signing_key:         root_ca
 #     # Digest algorithm, defaults to sha256
 #     digest:              sha1
@@ -125,7 +128,44 @@ ssl_sequence: []
 #     # If set to no the file will not be stored locally
 #     fetch:               no
 #
-# # Certificate chain
+# # Reuse a private key to generate a new certificate
+# - name:          website_self_signed
+#   # In this example the certificate is created using a previous private key
+#   # (of the "website" entity) and self-signing the it. This feature can also
+#   # be used to create cross-signed certificates.
+#   certificate:
+#     generating_key:      website
+#     self_signed:         yes
+#     common_name:         "{{ ansible_fqdn }}"
+#     alt_names_dns:       [ internal.example.com ]
+#     digest:              sha1
+#     #owner:               nginx
+#     #group:               nginx
+#     basicConstraints:    'CA:FALSE'
+#     subjectKeyIdentifier: 'hash'
+#     keyUsage:            'nonRepudiation,digitalSignature,keyEncipherment'
+#     extendedKeyUsage:    'clientAuth'
+#
+# # Create only the CSR
+# - name:          website_manual_sign
+#   # Here both "signing_key" and "self_signed" are missing. This stops the role
+#   # at the CSR only so that it can be manually signed. This, of course, is a
+#   # two steps process and when you have the certificate it must be added back
+#   # for the role to install it.
+#   certificate:
+#     generating_key:      website
+#     self_signed:         yes
+#     common_name:         "{{ ansible_fqdn }}"
+#     alt_names_dns:       [ internal.example.com ]
+#     digest:              sha1
+#     #owner:               nginx
+#     #group:               nginx
+#     basicConstraints:    'CA:FALSE'
+#     subjectKeyIdentifier: 'hash'
+#     keyUsage:            'nonRepudiation,digitalSignature,keyEncipherment'
+#     extendedKeyUsage:    'clientAuth'
+#
+# # Create a certificate chain
 # - name:          website_chain
 #   # Definition the chain as list of certificates. Here it's shown on a separate
 #   # entity but it can be part of any entity with "key" and "certificates"
@@ -147,7 +187,8 @@ ssl_sequence: []
 #     certificates:
 #      - website
 #      - root_ca
-
+#      - website_self_signed
+#
 # # Example of a client certificate, created in one entity, with a chain file.
 # - name:          client_certificate
 #   key:
