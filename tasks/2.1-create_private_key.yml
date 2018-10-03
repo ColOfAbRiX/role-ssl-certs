@@ -1,11 +1,19 @@
 ---
 
-- name: "set_fact : 2.1-create_private_key.yml : {{ entity.name }}"
+- name: "Extract Private Key Data : {{ entity.name }}"
   set_fact:
-    key_has_pass: "{{ private_key.encryption | default('') != '' }}"
-    key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
-    force_remote: "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create: "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
+    private_key:    "{{ entity.key | default(omit) }}"
+
+- name: "Build Private Key Paths : {{ entity.name }}"
+  set_fact:
+    key_file:       "{{ entity.key_base | default(ssl_keys_base.path) }}/{{ entity.name }}.key"
+    local_key_file: "{{ entity.store_key_base | default(ssl_store_keys_base) }}/{{ entity.name }}.key"
+
+- name: "Private Key Facts and Options : {{ entity.name }}"
+    key_has_pass:   "{{ private_key.encryption | default('') != '' }}"
+    key_pass:       "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
+    force_remote:   "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:   "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Copy Local Key to Target : {{ entity.name }}"
   copy:

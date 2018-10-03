@@ -1,30 +1,5 @@
 ---
 
-# Create commodity variables for entities
-- name: "set_fact : 2-manage_entity.yml : {{ entity.name }}"
-  set_fact:
-    private_key:      "{{ entity.key | default(omit) }}"
-    certificate:      "{{ entity.certificate | default(omit) }}"
-    chain:            "{{ entity.chain | default(omit) }}"
-
-# Create commodity variables for remote files
-- name: "set_fact : 2-manage_entity.yml : {{ entity.name }}"
-  set_fact:
-    key_file:         "{{ entity.key_base | default(ssl_keys_base.path) }}/{{ entity.name }}.key"
-    csr_file:         "{{ entity.csr_base | default(ssl_csr_base.path) }}/{{ entity.name }}.csr"
-    cert_file:        "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}.crt"
-    chain_file:       "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}-chain.crt"
-
-# Create commodity variables for local files
-- name: "set_fact : 2-manage_entity.yml : {{ entity.name }}"
-  set_fact:
-    local_key_file:   "{{ entity.store_key_base | default(ssl_store_keys_base) }}/{{ entity.name }}.key"
-    local_cert_file:  "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}.crt"
-    local_chain_file: "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}-chain.crt"
-
-
-##  Manage the entities  ##
-
 - include: "2.1-create_private_key.yml"
   when: entity.key is defined
 

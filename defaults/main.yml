@@ -24,6 +24,9 @@ ssl_csr_dir:
 ssl_crt_dir:
   name: crt
   mode: '0755'
+ssl_chain_dir:
+  name: crt
+  mode: '0755'
 
 # Default OpenSSL values
 ssl_country:      GB
@@ -52,6 +55,10 @@ ssl_sequence: []
 #   key_base:      /tmp/ssl_certs/key
 #   csr_base:      /tmp/ssl_certs/csr
 #   crt_base:      /tmp/ssl_certs/crt
+#   # Also the path of where to store the files locally can be customized.
+#   store_key_base: /tmp/ssl_certs/key
+#   store_csr_base: /tmp/ssl_certs/csr
+#   store_crt_base: /tmp/ssl_certs/crt
 #   # Definition of the private key (more options shown below too)
 #   key:
 #     # Crypto system: rsa, dsa, ecdsa
@@ -167,6 +174,9 @@ ssl_sequence: []
 #
 # # Create a certificate chain
 # - name:          website_chain
+#   # This is a postfix applied to the name of the entity to create the file
+#   # name of the chain.
+#   chain_postfix:       '-list'
 #   # Definition the chain as list of certificates. Here it's shown on a separate
 #   # entity but it can be part of any entity with "key" and "certificates"
 #   # attributes. Chain files will end in -chain.crt

@@ -3,6 +3,15 @@
 # Fabrizio Colonna <colofabrix@tin.it> - 19/09/2018
 #
 
+import os
+
+
+def join_paths(paths):
+    """
+    Exposes the Python os.path.join to Ansible
+    """
+    return os.path.join(*paths)
+
 
 def cert_files_in_chain(values, certs_list, base_path=""):
     """
@@ -158,6 +167,7 @@ class FilterModule(object):
     """ Ansible core jinja2 filters """
     def filters(self):
         return {
+            'join_paths': join_paths,
             'cert_files_in_chain': cert_files_in_chain,
             'check_sequence_names_present': check_sequence_names_present,
             'check_sequence_names_uniqe': check_sequence_names_uniqe,

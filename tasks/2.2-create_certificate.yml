@@ -1,27 +1,35 @@
 ---
 
-# Find the entity that has the private key used to generate the certificate
-- name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
+- name: "Extract Certificate Data : {{ entity.name }}"
   set_fact:
-    generating_entity:       "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
+    certificate:         "{{ entity.certificate | default(omit) }}"
 
-# Data about the generating key is built for subsequent use
-- name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
+- name: "Build Certificate Paths : {{ entity.name }}"
   set_fact:
-    generating_key_file:     "{{ generating_entity.base_path | default(ssl_keys_base.path) }}/{{ generating_entity.name }}.key"
+    csr_file:            "{{ entity.csr_base | default(ssl_csr_base.path) }}/{{ entity.name }}.csr"
+    cert_file:           "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}.crt"
+    local_cert_file:     "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}.crt"
+
+- name: "Discover Generating Entity : {{ entity.name }}"
+  set_fact:
+    generating_entity:   "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
+
+- name: "Generating Key Facts and Certificate Options : {{ entity.name }}"
+  set_fact:
+    generating_key_file: "{{ generating_entity.base_path | default(ssl_keys_base.path) }}/{{ generating_entity.name }}.key"
     generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
-    generating_key_pass:     "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
-    force_remote:            "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create:            "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+    generating_key_pass: "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
+    force_remote:        "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:        "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Set OpenSSL Configuration File : {{ entity.name }}"
   vars:
-    cert_subj_country:        "{{ certificate.country | default(ssl_country) }}"
-    cert_subj_email:          "{{ certificate.email | default(ssl_email) }}"
-    cert_subj_location:       "{{ certificate.location | default(ssl_location) }}"
-    cert_subj_org:            "{{ certificate.organization | default(ssl_organization) }}"
-    cert_subj_org_unit:       "{{ certificate.organizational_unit | default(ssl_organizational_unit) }}"
-    cert_subj_state:          "{{ certificate.state | default(ssl_state) }}"
+    cert_subj_country:   "{{ certificate.country | default(ssl_country) }}"
+    cert_subj_email:     "{{ certificate.email | default(ssl_email) }}"
+    cert_subj_location:  "{{ certificate.location | default(ssl_location) }}"
+    cert_subj_org:       "{{ certificate.organization | default(ssl_organization) }}"
+    cert_subj_org_unit:  "{{ certificate.organizational_unit | default(ssl_organizational_unit) }}"
+    cert_subj_state:     "{{ certificate.state | default(ssl_state) }}"
   template:
     src:    tmp/openssl.cnf.j2
     dest:   /tmp/openssl.cnf
@@ -88,18 +96,16 @@
 # certificate with a key we already have
 - block:
 
-   # Find the entity that has the private key used to sign the certificate
-   - name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
+   - name: "Discover Signing Entity : {{ entity.name }}"
      set_fact:
-       signing_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
+       signing_entity:   "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
 
-   # Data about the signing key is built for subsequent use
-   - name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
+   - name: "Signing Key Facts : {{ entity.name }}"
      set_fact:
-       signing_key_file:     "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
-       signing_crt_file:     "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
+       signing_key_file: "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
+       signing_crt_file: "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
        signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
-       signing_key_pass:     "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
+       signing_key_pass: "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
 
    - name: "Sign CSR and Generate Certificate : {{ entity.name }}"
      shell: |

@@ -12,10 +12,10 @@
 - include: "1-pre_checks.yml"
   tags: ssl-certs
 
-- name: "set_fact : main.yml"
+- name: "Set Base Remote Paths"
   set_fact:
     ssl_keys_base:
-      path:   "{{ ssl_base.path }}/{{ ssl_key_dir.name }}"
+      path:   "{{ [ssl_base.path, ssl_key_dir.name] | join_paths }}"
       owner:  "{{ ssl_key_dir.owner | default(omit) }}"
       group:  "{{ ssl_key_dir.group | default(omit) }}"
       mode:   "{{ ssl_key_dir.mode | default(omit) }}"
@@ -23,7 +23,7 @@
       serole: "{{ ssl_key_dir.serole | default(omit) }}"
       setype: "{{ ssl_key_dir.setype | default(omit) }}"
     ssl_csr_base:
-      path:   "{{ ssl_base.path }}/{{ ssl_csr_dir.name }}"
+      path:   "{{ [ssl_base.path, ssl_csr_dir.name] | join_paths }}"
       owner:  "{{ ssl_csr_dir.owner | default(omit) }}"
       group:  "{{ ssl_csr_dir.group | default(omit) }}"
       mode:   "{{ ssl_csr_dir.mode | default(omit) }}"
@@ -31,16 +31,29 @@
       serole: "{{ ssl_csr_dir.serole | default(omit) }}"
       setype: "{{ ssl_csr_dir.setype | default(omit) }}"
     ssl_certs_base:
-      path:   "{{ ssl_base.path }}/{{ ssl_crt_dir.name }}"
+      path:   "{{ [ssl_base.path, ssl_crt_dir.name] | join_paths }}"
       owner:  "{{ ssl_crt_dir.owner | default(omit) }}"
       group:  "{{ ssl_crt_dir.group | default(omit) }}"
       mode:   "{{ ssl_crt_dir.mode | default(omit) }}"
       seuser: "{{ ssl_crt_dir.seuser | default(omit) }}"
       serole: "{{ ssl_crt_dir.serole | default(omit) }}"
       setype: "{{ ssl_crt_dir.setype | default(omit) }}"
-    ssl_store_keys_base:  "{{ ssl_store_base }}/{{ ssl_key_dir.name }}"
-    ssl_store_csr_base:   "{{ ssl_store_base }}/{{ ssl_csr_dir.name }}"
-    ssl_store_certs_base: "{{ ssl_store_base }}/{{ ssl_crt_dir.name }}"
+    ssl_chain_base:
+      path:   "{{ [ssl_base.path, ssl_chain_dir.name] | join_paths }}"
+      owner:  "{{ ssl_chain_dir.owner | default(omit) }}"
+      group:  "{{ ssl_chain_dir.group | default(omit) }}"
+      mode:   "{{ ssl_chain_dir.mode | default(omit) }}"
+      seuser: "{{ ssl_chain_dir.seuser | default(omit) }}"
+      serole: "{{ ssl_chain_dir.serole | default(omit) }}"
+      setype: "{{ ssl_chain_dir.setype | default(omit) }}"
+  tags: ssl-certs
+
+- name: "Set Base Local Paths"
+  set_fact:
+    ssl_store_keys_base:  "{{ [ssl_store_base, ssl_key_dir.name] | join_paths }}"
+    ssl_store_csr_base:   "{{ [ssl_store_base, ssl_csr_dir.name] | join_paths }}"
+    ssl_store_certs_base: "{{ [ssl_store_base, ssl_crt_dir.name] | join_paths }}"
+    ssl_store_chain_base: "{{ [ssl_store_base, ssl_chain_dir.name] | join_paths }}"
   tags: ssl-certs
 
 - name: "Install Dependencies"

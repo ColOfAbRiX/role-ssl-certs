@@ -102,7 +102,8 @@ More examples are in the [default configuration](defaults/main.yml) file.
 
 In order of priority
 
-* Separate CSR files
+* Fetch also CSR files
+* Refactor how the paths are specified
 * Support for PKC#12 format
 * Cascade recreation of entities
 
