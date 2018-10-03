@@ -3,8 +3,6 @@
 # Fabrizio Colonna <colofabrix@tin.it> - 19/09/2018
 #
 
-import os
-
 
 def cert_files_in_chain(values, certs_list, base_path=""):
     """
@@ -27,7 +25,6 @@ def cert_files_in_chain(values, certs_list, base_path=""):
 
     return result
 
-# #  Checks Section  # #
 
 def check_sequence_names_present(sequence):
     """
@@ -68,7 +65,7 @@ def check_sequence_signing_type(sequence):
     """
     for entity in sequence:
         # Check only if the entity has a defined certificate
-        if not 'certificate' in entity:
+        if 'certificate' not in entity:
             continue
         cert = entity['certificate']
 
@@ -76,7 +73,8 @@ def check_sequence_signing_type(sequence):
         if 'signing_key' in cert and 'self_signed' in cert:
             return {
                 'result': False,
-                'message': "The certificate '%s' can't define signing_key and self_signed at the same time." % entity['name']
+                'message': ("The certificate '%s' can't define signing_key and self_signed at the "
+                            "same time.") % entity['name']
             }
 
     return {
@@ -94,7 +92,7 @@ def check_private_keys_helper(sequence, key_type):
     # Scan all entities once
     for entity in sequence:
         # Check only if the entity has a defined certificate
-        if not 'certificate' in entity:
+        if 'certificate' not in entity:
             continue
 
         if key_type in entity['certificate']:
@@ -105,7 +103,9 @@ def check_private_keys_helper(sequence, key_type):
             if len(signing_entity) != 1:
                 return {
                     'result': False,
-                    'message': "The %s entity '%s' referenced by certificate '%s' is not defined or it doesn't appear before the certificate itself in ssl_sequence." % (key_type, referenced_key, entity['name']),
+                    'message': ("The %s entity '%s' referenced by certificate '%s' is not defined "
+                                "or it doesn't appear before the certificate itself in ssl_sequence"
+                                ".") % (key_type, referenced_key, entity['name']),
                     'data': signing_entity
                 }
             signing_entity = signing_entity[0]
@@ -114,7 +114,8 @@ def check_private_keys_helper(sequence, key_type):
             if 'key' not in signing_entity:
                 return {
                     'result': False,
-                    'message': "The %s entity '%s' referenced by certificate '%s' must define a 'key' attribute." % (key_type, referenced_key, entity['name']),
+                    'message': ("The %s entity '%s' referenced by certificate '%s' must define a "
+                                "'key' attribute.") % (key_type, referenced_key, entity['name']),
                     'data': signing_entity
                 }
 
@@ -123,7 +124,8 @@ def check_private_keys_helper(sequence, key_type):
             if 'key' not in entity:
                 return {
                     'result': False,
-                    'message': "The self_signed certificate '%s' must define a 'key' attribute." % entity['name'],
+                    'message': "The self_signed certificate '%s' must define a 'key' attribute." %
+                               entity['name'],
                     'data': signing_entity
                 }
 
