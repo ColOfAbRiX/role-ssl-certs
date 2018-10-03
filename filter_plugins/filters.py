@@ -6,11 +6,54 @@
 import os
 
 
-def join_paths(paths):
+def object_path(entity, obj_type, global_base, global_obj_base, remote=True):
     """
-    Exposes the Python os.path.join to Ansible
+    Build the path of an object (key, certificate, chain, ...)
     """
-    return os.path.join(*paths)
+    if obj_type == 'key':
+        entity_base_key = 'key_base'
+        object_base_key = 'base'
+        postfix = ''
+        extension = '.key'
+
+    elif obj_type == 'cert':
+        obj_type = 'certificate'
+        entity_base_key = 'crt_base'
+        object_base_key = 'base'
+        postfix = ''
+        extension = '.crt'
+
+    elif obj_type == 'csr':
+        obj_type = 'certificate'
+        entity_base_key = 'csr_base'
+        object_base_key = 'csr_base'
+        postfix = ''
+        extension = '.csr'
+
+    elif obj_type == 'chain':
+        entity_base_key = 'chain_base'
+        object_base_key = 'base'
+        postfix = '-chain'
+        extension = '.crt'
+
+    # Build the name of the key that hold the local store base
+    if remote:
+        entity_base_key = "store_%s" % entity_base_key
+
+    # Join all the paths together to exploit python os.path.join properties
+    path = os.path.join(
+        global_base,
+        global_obj_base.get('name', ''),
+        entity.get(entity_base_key, ''),
+        entity[obj_type].get(object_base_key, ''),
+        entity['name']
+    )
+
+    return "%s%s%s" % (
+        path,
+        postfix,
+        extension
+    )
 
 
 def cert_files_in_chain(values, certs_list, base_path=""):
@@ -167,7 +210,7 @@ class FilterModule(object):
     """ Ansible core jinja2 filters """
     def filters(self):
         return {
-            'join_paths': join_paths,
+            'object_path': object_path,
             'cert_files_in_chain': cert_files_in_chain,
             'check_sequence_names_present': check_sequence_names_present,
             'check_sequence_names_uniqe': check_sequence_names_uniqe,

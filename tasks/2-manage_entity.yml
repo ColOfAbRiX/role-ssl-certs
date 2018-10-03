@@ -6,6 +6,6 @@
 - include: "2.2-create_certificate.yml"
   when: entity.certificate is defined
 
-- include: "2.3-create_chain.yml"
-  when: entity.chain is defined and
-        entity.chain.certificates | default([]) | length > 0
+# - include: "2.3-create_chain.yml"
+#   when: entity.chain is defined and
+#         entity.chain.certificates | default([]) | length > 0

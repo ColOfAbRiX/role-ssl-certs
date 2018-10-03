@@ -6,15 +6,18 @@
 ssl_store_base: ../file_store/ssl_certificates
 
 # Default working path on the target machine. This is where the keys,
-# certificates and chains will be created. It supports the fields of the ansible
-# "file" module: owner, group, mode, ...
+# certificates and chains will be created if no other setting is used to
+# override it. It supports the fields of the ansible "file" module: owner,
+# group, mode and so on.
+# Entities in ssl_sequence can complement or override this path.
 ssl_base:
   path: /tmp/ssl_certs
+  mode: '0755'
 
-# Subdirectories to store the different the objects relative to "ssl_base". They
-# can also be uniform and refer to the same directory. They will also be used to
-# place the files inside the local "ssl_store_base". Each variable support all
-# the fields of the ansible "file" module: owner, group, mode, ...
+# Subdirectories to store the different the objects relative to "ssl_base.path"
+# and "ssl_store_base". Each variable support all the fields of the ansible
+# "file" module: owner, group, mode and so on.
+# Entities in ssl_sequence can complement or override this paths.
 ssl_key_dir:
   name: key
   mode: '0700'

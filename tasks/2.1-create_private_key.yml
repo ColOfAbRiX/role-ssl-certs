@@ -6,14 +6,26 @@
 
 - name: "Build Private Key Paths : {{ entity.name }}"
   set_fact:
-    key_file:       "{{ entity.key_base | default(ssl_keys_base.path) }}/{{ entity.name }}.key"
-    local_key_file: "{{ entity.store_key_base | default(ssl_store_keys_base) }}/{{ entity.name }}.key"
+    key_file:       "{{ entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
+    local_key_file: "{{ entity | object_path('key', ssl_store_base, ssl_key_dir, remote=False) }}"
 
 - name: "Private Key Facts and Options : {{ entity.name }}"
+  set_fact:
     key_has_pass:   "{{ private_key.encryption | default('') != '' }}"
     key_pass:       "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
     force_remote:   "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:   "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
+
+- name: "Create Remote Path : {{ entity.name }}"
+  file:
+    path:   "{{ key_file | dirname }}"
+    state:  directory
+    owner:  "{{ ssl_key_dir.owner | default(omit) }}"
+    group:  "{{ ssl_key_dir.group | default(omit) }}"
+    mode:   "{{ ssl_key_dir.mode | default(omit) }}"
+    seuser: "{{ ssl_key_dir.seuser | default(omit) }}"
+    serole: "{{ ssl_key_dir.serole | default(omit) }}"
+    setype: "{{ ssl_key_dir.setype | default(omit) }}"
 
 - name: "Copy Local Key to Target : {{ entity.name }}"
   copy:

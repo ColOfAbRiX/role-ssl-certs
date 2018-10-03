@@ -3,15 +3,15 @@
 - name: "Extract Chain Data : {{ entity.name }}"
   set_fact:
     chain:                "{{ entity.chain | default(omit) }}"
+    certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
 
 - name: "Build Chain Paths : {{ entity.name }}"
   set_fact:
-    chain_file:           "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}{{ entity.chain_postfix | default('-chain') }}.crt"
-    local_chain_file:     "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}{{ entity.chain_postfix | default('-chain') }}.crt"
+    chain_file:           "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}-chain.crt"
+    local_chain_file:     "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}-chain.crt"
 
-- name: "Chain Facts and Options : {{ entity.name }}"
+- name: "Chain Options : {{ entity.name }}"
   set_fact:
-    certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
     force_remote:         "{{ chain.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:         "{{ chain.force_create | default(entity.force_create | default(False)) | bool }}"
 

@@ -2,11 +2,11 @@
 
 # Pre-checks are performed using the more powerful Python and then displayed here
 
-- name: "set_fact : 1-pre_checks.yml"
+- name: "Sanitize Data"
   set_fact:
     sanitized_ssl_seq: "{{ ssl_sequence | default([]) }}"
 
-- name: "set_fact : 1-pre_checks.yml"
+- name: "Apply All Checks"
   set_fact:
     check_results:
      - "{{ sanitized_ssl_seq | check_sequence_names_present }}"

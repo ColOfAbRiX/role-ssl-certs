@@ -6,9 +6,10 @@
 
 - name: "Build Certificate Paths : {{ entity.name }}"
   set_fact:
-    csr_file:            "{{ entity.csr_base | default(ssl_csr_base.path) }}/{{ entity.name }}.csr"
-    cert_file:           "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}.crt"
-    local_cert_file:     "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}.crt"
+    csr_file:            "{{ entity | object_path('csr', ssl_base.path, ssl_csr_dir) }}"
+    cert_file:           "{{ entity | object_path('cert', ssl_base.path, ssl_crt_dir) }}"
+    local_csr_file:      "{{ entity | object_path('csr', ssl_store_base, ssl_csr_dir, remote=False) }}"
+    local_cert_file:     "{{ entity | object_path('cert', ssl_store_base, ssl_crt_dir, remote=False) }}"
 
 - name: "Discover Generating Entity : {{ entity.name }}"
   set_fact:
@@ -16,11 +17,33 @@
 
 - name: "Generating Key Facts and Certificate Options : {{ entity.name }}"
   set_fact:
-    generating_key_file: "{{ generating_entity.base_path | default(ssl_keys_base.path) }}/{{ generating_entity.name }}.key"
+    generating_key_file: "{{ generating_entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
     generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
     generating_key_pass: "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
     force_remote:        "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:        "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+
+- name: "Create Certificate Remote Path : {{ entity.name }}"
+  file:
+    path:   "{{ cert_file | dirname }}"
+    state:  directory
+    owner:  "{{ ssl_crt_dir.owner | default(omit) }}"
+    group:  "{{ ssl_crt_dir.group | default(omit) }}"
+    mode:   "{{ ssl_crt_dir.mode | default(omit) }}"
+    seuser: "{{ ssl_crt_dir.seuser | default(omit) }}"
+    serole: "{{ ssl_crt_dir.serole | default(omit) }}"
+    setype: "{{ ssl_crt_dir.setype | default(omit) }}"
+
+- name: "Create CSR Remote Path : {{ entity.name }}"
+  file:
+    path:   "{{ csr_file | dirname }}"
+    state:  directory
+    owner:  "{{ ssl_csr_dir.owner | default(omit) }}"
+    group:  "{{ ssl_csr_dir.group | default(omit) }}"
+    mode:   "{{ ssl_csr_dir.mode | default(omit) }}"
+    seuser: "{{ ssl_csr_dir.seuser | default(omit) }}"
+    serole: "{{ ssl_csr_dir.serole | default(omit) }}"
+    setype: "{{ ssl_csr_dir.setype | default(omit) }}"
 
 - name: "Set OpenSSL Configuration File : {{ entity.name }}"
   vars:
@@ -102,8 +125,8 @@
 
    - name: "Signing Key Facts : {{ entity.name }}"
      set_fact:
-       signing_key_file: "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
-       signing_crt_file: "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
+       signing_key_file: "{{ signing_entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
+       signing_crt_file: "{{ signing_entity | object_path('cert', ssl_base.path, ssl_crt_dir) }}"
        signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
        signing_key_pass: "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
 
