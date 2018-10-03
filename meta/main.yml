@@ -3,7 +3,7 @@ galaxy_info:
   author: Fabrizio Colonna <colofabrix@tin.it>
   description: Creates SSL objects
   company:
-  license:
+  license: MIT
   min_ansible_version: 2.3.0
   #
   # Below are all platforms currently available. Just uncomment
@@ -12,11 +12,19 @@ galaxy_info:
   #
   platforms:
     - name: EL
-      versions:
-        - 7
+    - name: Ubuntu
+    - name: Debian
+    - name: Fedora
+
+  cloud_platforms: []
+
   #
   # Below are all categories currently available. Just as with
   # the platforms above, uncomment those that apply to your role.
   #
-  categories:
+  galaxy_tags:
     - security
+    - certificates
+    - ssl
+    - openssl
+    - networking

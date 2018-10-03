@@ -1,10 +1,10 @@
 ---
 
-- name: "set_fact : create_chain.yml : {{ entity.name }}"
+- name: "set_fact : 2.3-create_chain.yml : {{ entity.name }}"
   set_fact:
     certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
 
-- name: "set_fact : create_chain.yml : {{ entity.name }}"
+- name: "set_fact : 2.3-create_chain.yml : {{ entity.name }}"
   set_fact:
     force_remote:        "{{ chain.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:        "{{ chain.force_create | default(entity.force_create | default(False)) | bool }}"
@@ -38,7 +38,7 @@
     setype: "{{ chain.setype | default(omit) }}"
 
 - name: "Trust Chain : {{ entity.name }}"
-  include: trust.yml
+  include: "3-trust.yml"
   vars:
     trust_file: "{{ chain_file }}"
   when: chain.trust | default(False) | bool

@@ -1,12 +1,12 @@
 ---
 
 # Find the entity that has the private key used to generate the certificate
-- name: "set_fact : create_certificate.yml : {{ entity.name }}"
+- name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
   set_fact:
     generating_entity:       "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
 
 # Data about the generating key is built for subsequent use
-- name: "set_fact : create_certificate.yml : {{ entity.name }}"
+- name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
   set_fact:
     generating_key_file:     "{{ generating_entity.base_path | default(ssl_keys_base.path) }}/{{ generating_entity.name }}.key"
     generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
@@ -89,12 +89,12 @@
 - block:
 
    # Find the entity that has the private key used to sign the certificate
-   - name: "set_fact : create_certificate.yml : {{ entity.name }}"
+   - name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
      set_fact:
        signing_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
 
    # Data about the signing key is built for subsequent use
-   - name: "set_fact : create_certificate.yml : {{ entity.name }}"
+   - name: "set_fact : 2.2-create_certificate.yml : {{ entity.name }}"
      set_fact:
        signing_key_file:     "{{ signing_entity.base_path | default(ssl_keys_base.path) }}/{{ signing_entity.name }}.key"
        signing_crt_file:     "{{ signing_entity.crt_base | default(ssl_certs_base.path) }}/{{ signing_entity.name }}.crt"
@@ -136,7 +136,7 @@
     setype: "{{ certificate.setype | default(omit) }}"
 
 - name: "Trust Certificate : {{ entity.name }}"
-  include: trust.yml
+  include: "3-trust.yml"
   vars:
     trust_file: "{{ cert_file }}"
   when: certificate.trust | default(False) | bool

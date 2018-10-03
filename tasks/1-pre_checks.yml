@@ -1,0 +1,21 @@
+---
+
+- name: "set_fact : 1-pre_checks.yml : {{ entity.name }}"
+  set_fact:
+    sanitized_ssl_seq: "{{ ssl_sequence | default([]) }}"
+
+- name: "set_fact : 1-pre_checks.yml : {{ entity.name }}"
+  set_fact:
+    check_results:
+     - "{{ sanitized_ssl_seq | check_sequence_names_present }}"
+     - "{{ sanitized_ssl_seq | check_sequence_names_uniqe }}"
+     - "{{ sanitized_ssl_seq | check_sequence_signing_type }}"
+     - "{{ sanitized_ssl_seq | check_sequence_signing_keys }}"
+     - "{{ sanitized_ssl_seq | check_sequence_generating_keys }}"
+
+- name: "Validate All Checks"
+  debug: msg="{% if not item.result %}Check FAILED. {{ item.message }}{% else %}Check PASSED.{% endif %}"
+  failed_when: not item.result
+  when: not item.result
+  with_items:
+   - "{{ check_results }}"

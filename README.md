@@ -18,25 +18,27 @@ The role tries to be flexible and generic and doesn't want to impose opinionated
  - It can install the certificates on trust stores (OS dependent).
  - It can use extended SSLv3 attributes.
 
-## Requirements
+## Requirements and Dependencies
 
-The role only requires OpenSSL installed on the system.
+The role only requires OpenSSL which is installed where required by the role itself.
 
 The OS-level trust of certificate is supported only on CentOS/RedHat 7.
 
 # Description
 
-The role works by using the `ssl_sequence` list of dictionaries as a sequence of elements to create. It will process each entry one at the time and for each one of them it will examine the `key`, `certificate` and `chain` elements, one at, the time and create the files.
+The role works by using the `ssl_sequence` list of dictionaries as a sequence of entities to create. It will process each entity one at the time and for each one of them it will examine the `key`, `certificate` and `chain` key, one at, the time and create the appropriate files.
 
-The role can use the Ansible local code to store all the produced certificates and key such that Ansible becomes the single and main source of all data. This use can be turned off using configuration variables.
+The role can use the Ansible local machine both as a store for the produced certificates/keys and a source for files to be installed on the targets. Ansible becomes the single and main source of all data. This use can be turned off using configuration variables.
 
-**NOTE:** As a minimum, all private keys that are kept in a GIT repository must be encrypted with [Ansible vault](2). **Never keep plain text secrets in GIT.**
+**NOTE:** All private keys that are kept in a GIT repository must be encrypted with [Ansible vault](2). **Never keep plain text secrets in GIT.**
 
 The [default configuration](defaults/main.yml) file contains a fully working example of how the role can be used to create a root CA, a certificate signed by that CA and a certificate chain with the description of all the options.
 
 ## Limitations and known issues
 
-The role only creates certificates in [PEM format](3).
+The role only creates certificates in [PEM format](3). PKC#12 is on the plan.
+
+Recreation of existing certificates and keys must be triggered manually with the various options given by the role (like `force_create`).
 
 If the definition of an entity changes the role will not recreate the entity or, in other words, updated of certificate and keys is not supported directly but it can still be achieved forcing recreation.
 
@@ -62,10 +64,6 @@ The default values mirror the default BIND configuration for the distribution wh
 
 The variables `ssl_base`, `ssl_key_dir`, `ssl_csr_dir` and `ssl_crt_dir` are dictionaries that support the keys of the [Ansible file module](4), refer to the [default configuration](defaults/main.yml) for examples.
 
-## Dependencies
-
-The role has not dependencies.
-
 ## Examples
 
 The following example creates a local Root CA and two certificates, with some custom properties for the certificates:
@@ -74,43 +72,41 @@ The following example creates a local Root CA and two certificates, with some cu
 ssl_sequence:
  # Root CA
  - name: root_ca
-   # If using custom paths, they must exist beforehand
-   key_base: /tmp/key
-   csr_base: /tmp/csr
-   crt_base: /tmp/crt
    key:
+     type:                   rsa
      bits:                   4096
    certificate:
      self_signed:            yes
      common_name:            Root CA
-     organizational_unit:    Example Security Office
-     # Installs the certificate on the system
-     trust:                  yes
-     # SSL v3 extensions. Default is to omit these values
      basicConstraints:       'critical, CA:TRUE'
      subjectKeyIdentifier:   'hash'
      authorityKeyIdentifier: 'keyid:always, issuer:always'
      keyUsage:               'critical, cRLSign, digitalSignature, keyCertSign'
+     days:                   3653
 
  # Website signed certificate
  - name: website
-   # It forces the creation of a new key and certificate on the machine
-   force_create: yes
-   # It gives priority to the key that is stored remotely versus the one stored
-   # on the local repository
-   force_remote: yes
    key:
+     type:                   rsa
      bits:                   2048
-     owner:                  nginx
-     group:                  nginx
    certificate:
      common_name:            "{{ ansible_fqdn }}"
-     alt_names_dns:          ["internal.example.com"]
+     alt_names_dns:          [ "internal.example.com" ]
      # Reference the above CA certificate
      signing_key:            root_ca
-     digest:                 sha1
-     days:                   90
 ```
+
+More examples are in the [default configuration](defaults/main.yml) file.
+
+## TODO
+
+In order of priority
+
+* Improve data checks
+* Separate CSR files
+* Add to Ansible Galaxy
+* Support for PKC#12 format
+* Cascade recreation of entities
 
 ## License
 

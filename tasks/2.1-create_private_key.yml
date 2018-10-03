@@ -1,6 +1,6 @@
 ---
 
-- name: "set_fact : create_private_key.yml : {{ entity.name }}"
+- name: "set_fact : 2.1-create_private_key.yml : {{ entity.name }}"
   set_fact:
     key_has_pass: "{{ private_key.encryption | default('') != '' }}"
     key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
