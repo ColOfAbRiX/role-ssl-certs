@@ -102,7 +102,6 @@ More examples are in the [default configuration](defaults/main.yml) file.
 
 In order of priority
 
-* Improve data checks
 * Separate CSR files
 * Add to Ansible Galaxy
 * Support for PKC#12 format
