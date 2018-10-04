@@ -6,63 +6,67 @@
 import os
 
 
-def object_path(entity, obj_type, global_base, global_obj_base, remote=True):
+def object_path(entity, obj_type, global_base, obj_type_base, remote=True):
     """
     Build the path of an object (key, certificate, chain, ...)
     """
     if obj_type == 'key':
-        entity_base_key = 'key_base'
-        object_base_key = 'base'
+        entity_base_key = 'path'
+        object_base_key = 'path'
         postfix = ''
         extension = '.key'
 
     elif obj_type == 'cert':
         obj_type = 'certificate'
-        entity_base_key = 'crt_base'
-        object_base_key = 'base'
+        entity_base_key = 'path'
+        object_base_key = 'path'
         postfix = ''
         extension = '.crt'
 
     elif obj_type == 'csr':
         obj_type = 'certificate'
-        entity_base_key = 'csr_base'
-        object_base_key = 'csr_base'
+        entity_base_key = 'path'
+        object_base_key = 'path'
         postfix = ''
         extension = '.csr'
 
     elif obj_type == 'chain':
-        entity_base_key = 'chain_base'
-        object_base_key = 'base'
+        entity_base_key = 'path'
+        object_base_key = 'path'
         postfix = '-chain'
         extension = '.crt'
 
     else:
         raise ValueError("Object type '%s' is not a recognized type." % obj_type)
 
+    # Soft return if missing object
     if obj_type not in entity:
         return ""
 
     # Build the name of the key that hold the local store base
     if remote:
-        entity_base_key = "store_%s" % entity_base_key
+        entity_base_key = "store_" + entity_base_key
+        object_base_key = "store_" + object_base_key
+
+    # Name of the file
+    file_name = entity['name'] + postfix + extension
 
     # Join all the paths together to exploit python os.path.join properties
-    path = os.path.join(
+    #  - Global base path
+    #  - Entity base path
+    #  - Object type base path
+    #  - Object base path
+    #  - Name of the entity
+    return os.path.join(
         global_base,
-        global_obj_base.get('name', ''),
         entity.get(entity_base_key, ''),
+        obj_type_base.get('name', ''),
         entity[obj_type].get(object_base_key, ''),
-        entity['name']
-    )
-
-    return "%s%s%s" % (
-        path,
-        postfix,
-        extension
+        file_name
     )
 
 
-def cert_files_in_chain(values, certs_list, global_base, global_obj_base):
+def cert_files_in_chain(values, certs_list, global_base, obj_type_base):
     """
     Find the entries in the SSL Sequence that are referenced by a certificate list
     """
@@ -75,7 +79,7 @@ def cert_files_in_chain(values, certs_list, global_base, global_obj_base):
             if entity['name'] != cert_name or 'certificate' not in entity:
                 continue
             # Use the filter to build the path of the certificate
-            cert_path = object_path(entity, 'cert', global_base, global_obj_base)
+            cert_path = object_path(entity, 'cert', global_base, obj_type_base)
             result.append(cert_path)
 
     return result

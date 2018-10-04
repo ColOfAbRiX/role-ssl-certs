@@ -49,7 +49,7 @@ The default values mirror the default BIND configuration for the distribution wh
 
 | Variable                  | Default                       | Description                                             |
 | :---                      | :---                          | :---                                                    |
-| `ssl_store_base`          | `../storage/ssl_certificates` | Path on the Ansible server where to store certificate.  |
+| `ssl_store_path`          | `../storage/ssl_certificates` | Path on the Ansible server where to store certificate.  |
 | `ssl_base`                | dict                          | Default working path on the target machine.             |
 | `ssl_key_dir`             | dict                          | Subdirectory of `ssl_base` where to store keys.         |
 | `ssl_csr_dir`             | dict                          | Subdirectory of `ssl_base` where to store CSR.          |

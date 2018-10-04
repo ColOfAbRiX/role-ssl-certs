@@ -1,15 +1,18 @@
 ---
 # defaults file for ssl-certs
 
-# NOTE on paths: Paths for files can be specified at 3 levels that are global,
-# entity and entity's object.
+# NOTE on paths: Paths for files can be specified at 4 levels that are:
+#  - Global base path
+#  - Entity path
+#  - Object type path
+#  - Object path
 # The definitions can be used together or override each other with the more
 # nested ones having more priority. The paths are joined together using python's
 # os.path.join which means you can exploit its properties to combine paths.
 # Each layer is responsible to set ownership and permission only at its level.
 
 # Base path for the store on the Ansible machine
-ssl_store_base: ../file_store/ssl_certificates
+ssl_store_path: ../file_store/ssl_certificates
 
 # Base path for all remote operations.
 # On top of specifying the path this dictionary contains all the fields of the
@@ -18,7 +21,7 @@ ssl_base:
   path: /tmp/ssl_certs
   mode: '0755'
 
-# Subdirectories to store the different objects.
+# Object type base paths.
 # On top of specifying the path this dictionary contains all the fields of the
 # Ansible module "file" and they are used to set permissions on the directory.
 ssl_key_dir:
@@ -56,14 +59,10 @@ ssl_sequence: []
 # #
 # # Root CA
 # - name:          root_ca
-#   # Custom paths for the entity.
-#   key_base:      /tmp/ssl_certs/key
-#   csr_base:      /tmp/ssl_certs/csr
-#   crt_base:      /tmp/ssl_certs/crt
-#   # Custom paths for the local store of the entity. Same rules as above
-#   store_key_base: /tmp/ssl_certs/key
-#   store_csr_base: /tmp/ssl_certs/csr
-#   store_crt_base: /tmp/ssl_certs/crt
+#   # Custom path for the entity.
+#   path:          /tmp/ssl_certs
+#   # Custom path for the local store of the entity. Same rules as above
+#   store_path:    /tmp/ssl_certs/key
 #   # File modifiers, as per usual "file" Ansible module, applied to the files
 #   # of the whole entity.
 #   #owner:        nginx
@@ -115,6 +114,10 @@ ssl_sequence: []
 #     type:                rsa
 #     # Length of they key, applies to RSA and DSA key types
 #     bits:                2048
+#     # Custom path for the object's entity.
+#     path:          /tmp/ssl_certs
+#     # Custom path for the local store of the object's entity.
+#     store_path:    /tmp/ssl_certs/key
 #     # File modifiers, as per usual "file" Ansible module, applied to the key
 #     # object only.
 #     #owner:               nginx
