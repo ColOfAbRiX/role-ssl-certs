@@ -1,23 +1,26 @@
 ---
 # defaults file for ssl-certs
 
-# Path on the Ansible server where to store certificate (this path is relative
-# to the running playbook)
+# NOTE on paths: Paths for files can be specified at 3 levels that are global,
+# entity and entity's object.
+# The definitions can be used together or override each other with the more
+# nested ones having more priority. The paths are joined together using python's
+# os.path.join which means you can exploit its properties to combine paths.
+# Each layer is responsible to set ownership and permission only at its level.
+
+# Base path for the store on the Ansible machine
 ssl_store_base: ../file_store/ssl_certificates
 
-# Default working path on the target machine. This is where the keys,
-# certificates and chains will be created if no other setting is used to
-# override it. It supports the fields of the ansible "file" module: owner,
-# group, mode and so on.
-# Entities in ssl_sequence can complement or override this path.
+# Base path for all remote operations.
+# On top of specifying the path this dictionary contains all the fields of the
+# Ansible module "file" and they are used to set permissions on the directory.
 ssl_base:
   path: /tmp/ssl_certs
   mode: '0755'
 
-# Subdirectories to store the different the objects relative to "ssl_base.path"
-# and "ssl_store_base". Each variable support all the fields of the ansible
-# "file" module: owner, group, mode and so on.
-# Entities in ssl_sequence can complement or override this paths.
+# Subdirectories to store the different objects.
+# On top of specifying the path this dictionary contains all the fields of the
+# Ansible module "file" and they are used to set permissions on the directory.
 ssl_key_dir:
   name: key
   mode: '0700'
@@ -53,15 +56,19 @@ ssl_sequence: []
 # #
 # # Root CA
 # - name:          root_ca
-#   # Custom paths that override the default working path for this key only.
-#   # If using custom paths, they must exist beforehand.
+#   # Custom paths for the entity.
 #   key_base:      /tmp/ssl_certs/key
 #   csr_base:      /tmp/ssl_certs/csr
 #   crt_base:      /tmp/ssl_certs/crt
-#   # Also the path of where to store the files locally can be customized.
+#   # Custom paths for the local store of the entity. Same rules as above
 #   store_key_base: /tmp/ssl_certs/key
 #   store_csr_base: /tmp/ssl_certs/csr
 #   store_crt_base: /tmp/ssl_certs/crt
+#   # File modifiers, as per usual "file" Ansible module, applied to the files
+#   # of the whole entity.
+#   #owner:        nginx
+#   #group:        nginx
+#   #mode:         '0666'
 #   # Definition of the private key (more options shown below too)
 #   key:
 #     # Crypto system: rsa, dsa, ecdsa
@@ -108,9 +115,11 @@ ssl_sequence: []
 #     type:                rsa
 #     # Length of they key, applies to RSA and DSA key types
 #     bits:                2048
-#     # File modifiers, as per usual "file" Ansible module
+#     # File modifiers, as per usual "file" Ansible module, applied to the key
+#     # object only.
 #     #owner:               nginx
 #     #group:               nginx
+#     #mode:                '0666'
 #     # If set to no the file will not be stored locally
 #     fetch:               no
 #     # Both force_create and force_remote can be specified also at "key",

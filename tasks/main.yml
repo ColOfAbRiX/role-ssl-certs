@@ -33,7 +33,7 @@
 
 - include: "2-manage_entity.yml"
   with_items:
-   - "{{ ssl_sequence }}"
+   - "{{ ssl_sequence | default([]) }}"
   when: entity.enabled | default(True) | bool
   loop_control:
     loop_var: entity

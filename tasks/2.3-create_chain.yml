@@ -1,19 +1,24 @@
 ---
 
-- name: "Extract Chain Data : {{ entity.name }}"
+- name: "Discover Certificates in Chain : {{ entity.name }}"
   set_fact:
-    chain:                "{{ entity.chain | default(omit) }}"
-    certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_certs_base.path) | list }}"
-
-- name: "Build Chain Paths : {{ entity.name }}"
-  set_fact:
-    chain_file:           "{{ entity.crt_base | default(ssl_certs_base.path) }}/{{ entity.name }}-chain.crt"
-    local_chain_file:     "{{ entity.store_crt_base | default(ssl_store_certs_base) }}/{{ entity.name }}-chain.crt"
+    certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_base.path, ssl_chain_dir) | list }}"
 
 - name: "Chain Options : {{ entity.name }}"
   set_fact:
     force_remote:         "{{ chain.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:         "{{ chain.force_create | default(entity.force_create | default(False)) | bool }}"
+
+- name: "Create Remote Path : {{ entity.name }}"
+  file:
+    path:   "{{ chain_file | dirname }}"
+    state:  directory
+    owner:  "{{ ssl_chain_dir.owner | default(omit) }}"
+    group:  "{{ ssl_chain_dir.group | default(omit) }}"
+    mode:   "{{ ssl_chain_dir.mode | default(omit) }}"
+    seuser: "{{ ssl_chain_dir.seuser | default(omit) }}"
+    serole: "{{ ssl_chain_dir.serole | default(omit) }}"
+    setype: "{{ ssl_chain_dir.setype | default(omit) }}"
 
 - name: "Copy Local Chain to Target : {{ entity.name }}"
   copy:
@@ -36,12 +41,12 @@
 - name: "Chain File Permissions : {{ entity.name }}"
   file:
     path:   "{{ chain_file }}"
-    owner:  "{{ chain.owner | default(omit) }}"
-    group:  "{{ chain.group | default(omit) }}"
-    mode:   "{{ chain.mode | default('0644') }}"
-    seuser: "{{ chain.seuser | default(omit) }}"
-    serole: "{{ chain.serole | default(omit) }}"
-    setype: "{{ chain.setype | default(omit) }}"
+    owner:  "{{ entity.owner | default(chain.owner | default(omit)) }}"
+    group:  "{{ entity.group | default(chain.group | default(omit)) }}"
+    mode:   "{{ entity.mode | default(chain.mode | default('0644')) }}"
+    seuser: "{{ entity.seuser | default(chain.seuser | default(omit)) }}"
+    serole: "{{ entity.serole | default(chain.serole | default(omit)) }}"
+    setype: "{{ entity.setype | default(chain.setype | default(omit)) }}"
 
 - name: "Trust Chain : {{ entity.name }}"
   include: "3-trust.yml"

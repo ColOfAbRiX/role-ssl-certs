@@ -1,20 +1,11 @@
 ---
 
-- name: "Extract Private Key Data : {{ entity.name }}"
-  set_fact:
-    private_key:    "{{ entity.key | default(omit) }}"
-
-- name: "Build Private Key Paths : {{ entity.name }}"
-  set_fact:
-    key_file:       "{{ entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
-    local_key_file: "{{ entity | object_path('key', ssl_store_base, ssl_key_dir, remote=False) }}"
-
 - name: "Private Key Facts and Options : {{ entity.name }}"
   set_fact:
-    key_has_pass:   "{{ private_key.encryption | default('') != '' }}"
-    key_pass:       "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
-    force_remote:   "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create:   "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
+    key_has_pass: "{{ private_key.encryption | default('') != '' }}"
+    key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
+    force_remote: "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create: "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Create Remote Path : {{ entity.name }}"
   file:
@@ -118,12 +109,12 @@
 - name: "Key File Permissions : {{ entity.name }}"
   file:
     path:   "{{ key_file }}"
-    owner:  "{{ private_key.owner | default(omit) }}"
-    group:  "{{ private_key.group | default(omit) }}"
-    mode:   "{{ private_key.mode | default('0400') }}"
-    seuser: "{{ private_key.seuser | default(omit) }}"
-    serole: "{{ private_key.serole | default(omit) }}"
-    setype: "{{ private_key.setype | default(omit) }}"
+    owner:  "{{ entity.owner | default(private_key.owner | default(omit)) }}"
+    group:  "{{ entity.group | default(private_key.group | default(omit)) }}"
+    mode:   "{{ entity.mode | default(private_key.mode | default('0400')) }}"
+    seuser: "{{ entity.seuser | default(private_key.seuser | default(omit)) }}"
+    serole: "{{ entity.serole | default(private_key.serole | default(omit)) }}"
+    setype: "{{ entity.setype | default(private_key.setype | default(omit)) }}"
 
 # If the key has been copied from locally, then this will have no effect
 - name: "Download Key from Target : {{ entity.name }}"

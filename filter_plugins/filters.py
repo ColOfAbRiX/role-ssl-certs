@@ -36,6 +36,12 @@ def object_path(entity, obj_type, global_base, global_obj_base, remote=True):
         postfix = '-chain'
         extension = '.crt'
 
+    else:
+        raise ValueError("Object type '%s' is not a recognized type." % obj_type)
+
+    if obj_type not in entity:
+        return ""
+
     # Build the name of the key that hold the local store base
     if remote:
         entity_base_key = "store_%s" % entity_base_key
@@ -56,27 +62,28 @@ def object_path(entity, obj_type, global_base, global_obj_base, remote=True):
     )
 
 
-def cert_files_in_chain(values, certs_list, base_path=""):
+def cert_files_in_chain(values, certs_list, global_base, global_obj_base):
     """
     Find the entries in the SSL Sequence that are referenced by a certificate list
     """
     result = []
 
     for cert_name in certs_list:
-        # To accept an entry it must contain a certificate definition and its
-        # name must be in the certs_list
-        cert_entries = filter(
-            lambda c: 'certificate' in c and c['name'] == cert_name,
-            values
-        )
-        cert_entries = map(
-            lambda c: "%s/%s.%s" % (c.get('crt_base', base_path), c['name'], 'crt'),
-            cert_entries
-        )
-        result.extend(cert_entries)
+        for entity in values:
+            # To accept an entity it must contain a certificate definition and
+            # its name must be in the certs_list
+            if entity['name'] != cert_name or 'certificate' not in entity:
+                continue
+            # Use the filter to build the path of the certificate
+            cert_path = object_path(entity, 'cert', global_base, global_obj_base)
+            result.append(cert_path)
 
     return result
 
+
+#
+# Checks section
+#
 
 def check_sequence_names_present(sequence):
     """
@@ -172,7 +179,7 @@ def check_private_keys_helper(sequence, key_type):
                 }
 
         elif 'self_signed' in entity['certificate']:
-            # If a certificate is self_signed, it must defined they key itself
+            # If a certificate is self_signed, the entity must define  private key itself
             if 'key' not in entity:
                 return {
                     'result': False,

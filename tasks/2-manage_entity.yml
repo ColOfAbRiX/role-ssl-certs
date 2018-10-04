@@ -1,11 +1,32 @@
 ---
 
+- name: "Extract Objects from Entity : {{ entity.name }}"
+  set_fact:
+    private_key:      "{{ entity.key | default(omit) }}"
+    certificate:      "{{ entity.certificate | default(omit) }}"
+    chain:            "{{ entity.chain | default(omit) }}"
+
+- name: "Build File Paths : {{ entity.name }}"
+  set_fact:
+    # Private Key
+    key_file:         "{{ entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
+    local_key_file:   "{{ entity | object_path('key', ssl_store_base, ssl_key_dir, remote=False) }}"
+    # Certificate Signing Request
+    csr_file:         "{{ entity | object_path('csr', ssl_base.path, ssl_csr_dir) }}"
+    local_csr_file:   "{{ entity | object_path('csr', ssl_store_base, ssl_csr_dir, remote=False) }}"
+    # Certificate
+    cert_file:        "{{ entity | object_path('cert', ssl_base.path, ssl_crt_dir) }}"
+    local_cert_file:  "{{ entity | object_path('cert', ssl_store_base, ssl_crt_dir, remote=False) }}"
+    # Chain
+    chain_file:       "{{ entity | object_path('chain', ssl_base.path, ssl_chain_dir) }}"
+    local_chain_file: "{{ entity | object_path('chain', ssl_store_base, ssl_chain_dir, remote=False) }}"
+
 - include: "2.1-create_private_key.yml"
   when: entity.key is defined
 
 - include: "2.2-create_certificate.yml"
   when: entity.certificate is defined
 
-# - include: "2.3-create_chain.yml"
-#   when: entity.chain is defined and
-#         entity.chain.certificates | default([]) | length > 0
+- include: "2.3-create_chain.yml"
+  when: entity.chain is defined and
+        entity.chain.certificates | default([]) | length > 0

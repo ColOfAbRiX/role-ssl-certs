@@ -1,16 +1,5 @@
 ---
 
-- name: "Extract Certificate Data : {{ entity.name }}"
-  set_fact:
-    certificate:         "{{ entity.certificate | default(omit) }}"
-
-- name: "Build Certificate Paths : {{ entity.name }}"
-  set_fact:
-    csr_file:            "{{ entity | object_path('csr', ssl_base.path, ssl_csr_dir) }}"
-    cert_file:           "{{ entity | object_path('cert', ssl_base.path, ssl_crt_dir) }}"
-    local_csr_file:      "{{ entity | object_path('csr', ssl_store_base, ssl_csr_dir, remote=False) }}"
-    local_cert_file:     "{{ entity | object_path('cert', ssl_store_base, ssl_crt_dir, remote=False) }}"
-
 - name: "Discover Generating Entity : {{ entity.name }}"
   set_fact:
     generating_entity:   "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
@@ -157,12 +146,12 @@
 - name: "Certificate File Permissions : {{ entity.name }}"
   file:
     path:   "{{ cert_file }}"
-    owner:  "{{ certificate.owner | default(omit) }}"
-    group:  "{{ certificate.group | default(omit) }}"
-    mode:   "{{ certificate.mode | default('0644') }}"
-    seuser: "{{ certificate.seuser | default(omit) }}"
-    serole: "{{ certificate.serole | default(omit) }}"
-    setype: "{{ certificate.setype | default(omit) }}"
+    owner:  "{{ entity.owner | default(certificate.owner | default(omit)) }}"
+    group:  "{{ entity.group | default(certificate.group | default(omit)) }}"
+    mode:   "{{ entity.mode | default(certificate.mode | default('0644')) }}"
+    seuser: "{{ entity.seuser | default(certificate.seuser | default(omit)) }}"
+    serole: "{{ entity.serole | default(certificate.serole | default(omit)) }}"
+    setype: "{{ entity.setype | default(certificate.setype | default(omit)) }}"
 
 - name: "Trust Certificate : {{ entity.name }}"
   include: "3-trust.yml"
