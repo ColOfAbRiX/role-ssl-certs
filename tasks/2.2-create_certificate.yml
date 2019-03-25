@@ -34,6 +34,10 @@
     serole: "{{ ssl_csr_dir.serole | default(omit) }}"
     setype: "{{ ssl_csr_dir.setype | default(omit) }}"
 
+- name: "Create Temporary OpenSSL Configuration File : {{ entity.name }}"
+  tempfile: state=file suffix=openssl
+  register: openssl_cfg
+
 - name: "Set OpenSSL Configuration File : {{ entity.name }}"
   vars:
     cert_subj_country:   "{{ certificate.country | default(ssl_country) }}"
@@ -44,7 +48,7 @@
     cert_subj_state:     "{{ certificate.state | default(ssl_state) }}"
   template:
     src:    tmp/openssl.cnf.j2
-    dest:   /tmp/openssl.cnf
+    dest:   "{{ openssl_cfg.path }}"
     mode:   '0644'
   changed_when: false
 
@@ -71,7 +75,7 @@
 - name: "Generate Self Signed Certificate : {{ entity.name }}"
   shell: |
     openssl req \
-      -config /tmp/openssl.cnf \
+      -config {{ openssl_cfg.path }} \
       -new \
       -x509 \
       {% if generating_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
@@ -93,7 +97,7 @@
 - name: "Generate Certificate Signing Request : {{ entity.name }}"
   shell: |
     openssl req \
-      -config /tmp/openssl.cnf \
+      -config {{ openssl_cfg.path }} \
       -new \
       {% if generating_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
       -key {{ generating_key_file }} \
@@ -123,7 +127,7 @@
      shell: |
        openssl x509 \
          -req \
-         -extfile /tmp/openssl.cnf \
+         -extfile {{ openssl_cfg.path }} \
          -extensions req-req_extensions \
          -{{ certificate.digest | default('sha256') }} \
          -days {{ certificate.days | default(30) }} \

@@ -44,7 +44,7 @@ def object_path(entity, obj_type, global_base, obj_type_base, remote=True):
         return ""
 
     # Build the name of the key that hold the local store base
-    if remote:
+    if not remote:
         entity_base_key = "store_" + entity_base_key
         object_base_key = "store_" + object_base_key
 
