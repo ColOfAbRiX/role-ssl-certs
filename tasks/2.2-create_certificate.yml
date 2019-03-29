@@ -123,6 +123,10 @@
        signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
        signing_key_pass: "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
 
+   - name: "Generate Certificate Serial Number : {{ entity.name }}"
+     shell: openssl rand -hex 16
+     register: caserial
+
    - name: "Sign CSR and Generate Certificate : {{ entity.name }}"
      shell: |
        openssl x509 \
@@ -134,7 +138,7 @@
          -in "{{ csr_file }}" \
          -CAkey "{{ signing_key_file }}" \
          -CA "{{ signing_crt_file }}" \
-         -CAcreateserial \
+         -set_serial "0x{{ caserial.stdout }}" \
          {% if signing_key_has_pass %}-passin env:openssl_passphrase{% endif %}\
          -out "{{ cert_file }}"
      args:
@@ -150,9 +154,9 @@
 - name: "Certificate File Permissions : {{ entity.name }}"
   file:
     path:   "{{ cert_file }}"
-    owner:  "{{ entity.owner | default(certificate.owner | default(omit)) }}"
-    group:  "{{ entity.group | default(certificate.group | default(omit)) }}"
-    mode:   "{{ entity.mode | default(certificate.mode | default('0644')) }}"
+    owner:  "{{ entity.owner  | default(certificate.owner  | default(omit)) }}"
+    group:  "{{ entity.group  | default(certificate.group  | default(omit)) }}"
+    mode:   "{{ entity.mode   | default(certificate.mode   | default('0644')) }}"
     seuser: "{{ entity.seuser | default(certificate.seuser | default(omit)) }}"
     serole: "{{ entity.serole | default(certificate.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(certificate.setype | default(omit)) }}"
