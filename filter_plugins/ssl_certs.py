@@ -105,7 +105,7 @@ def check_sequence_names_present(sequence):
     }
 
 
-def check_sequence_names_uniqe(sequence):
+def check_sequence_names_unique(sequence):
     """
     Checks that the names of entities are all unique
     """
@@ -224,7 +224,7 @@ class FilterModule(object):
             'object_path': object_path,
             'cert_files_in_chain': cert_files_in_chain,
             'check_sequence_names_present': check_sequence_names_present,
-            'check_sequence_names_uniqe': check_sequence_names_uniqe,
+            'check_sequence_names_unique': check_sequence_names_unique,
             'check_sequence_signing_type': check_sequence_signing_type,
             'check_sequence_generating_keys': check_sequence_generating_keys,
             'check_sequence_signing_keys': check_sequence_signing_keys,

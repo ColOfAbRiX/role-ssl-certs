@@ -21,7 +21,7 @@ ST                   = {{ cert_subj_state }}
 L                    = {{ cert_subj_location }}
 O                    = {{ cert_subj_org }}
 OU                   = {{ cert_subj_org_unit }}
-CN                   = {{ certificate.common_name }}
+CN                   = {{ certificate.common_name | default(entity.name) }}
 emailAddress         = {{ cert_subj_email }}
 
 # The configuration file section containing a list of extensions to add to

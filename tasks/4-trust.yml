@@ -1,0 +1,28 @@
+---
+
+- name: "Install Certificate on the System : {{ trust_file | basename }}"
+  copy:
+    src:    "{{ trust_file }}"
+    dest:   "{{ ssl_os_trust_store_path }}/{{ trust_file | basename }}"
+    force:  yes
+    owner:  root
+    group:  root
+    mode:   '0644'
+    seuser: system_u
+    serole: object_r
+    setype: cert_t
+  register: certificate_installation
+
+- name: "Update RHEL/CentOS CA Store : {{ trust_file | basename }}"
+  command: update-ca-trust
+  async: 15
+  poll: 0
+  when: ansible_distribution in ['CentOS', 'RedHat'] and
+        certificate_installation | changed
+
+- name: "Update Debian/Ubuntu CA Store : {{ trust_file | basename }}"
+  command: update-ca-certificates
+  async: 15
+  poll: 0
+  when: ansible_distribution in ['Debian', 'Ubuntu'] and
+        certificate_installation | changed

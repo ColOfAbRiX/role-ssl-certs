@@ -1,0 +1,62 @@
+---
+
+- set_fact:
+    der_entity: "{{ certificate.der | default({}) }}"
+    jks_entity: "{{ certificate.jks | default({}) }}"
+    cert_file_der: "{{ (cert_file | splitext)[0] }}.der"
+    cert_file_jks: "{{ (cert_file | splitext)[0] }}.jks"
+    safe_system_jks_path: "{% if system_jks_path | failed %}{{ cert_file_jks }}{% else %}{{ system_jks_path.stdout }}{% endif %}"
+
+
+# DER Format
+- name: "DER Format"
+  block:
+
+   - name: "Force DER creations : {{ entity.name }}"
+     file: path="{{ cert_file_der }}" state=absent
+     when: der_entity.force_create | default(False)
+
+   - name: "Converting certificate to DER format : {{ entity.name }}"
+     shell: |
+       openssl x509 \
+         -outform der \
+         -in "{{ cert_file }}" \
+         -out "{{ cert_file_der }}"
+     args:
+       creates: "{{ cert_file_der }}"
+
+   - name: "Certificate File Permissions : {{ entity.name }}"
+     file:
+       path:   "{{ cert_file_der }}"
+       owner:  "{{ der_entity.owner  | default(entity.owner  | default(certificate.owner  | default(omit))) }}"
+       group:  "{{ der_entity.group  | default(entity.group  | default(certificate.group  | default(omit))) }}"
+       mode:   "{{ der_entity.mode   | default(entity.mode   | default(certificate.mode   | default('0644'))) }}"
+       seuser: "{{ der_entity.seuser | default(entity.seuser | default(certificate.seuser | default(omit))) }}"
+       serole: "{{ der_entity.serole | default(entity.serole | default(certificate.serole | default(omit))) }}"
+       setype: "{{ der_entity.setype | default(entity.setype | default(certificate.setype | default(omit))) }}"
+
+  when: der_entity.convert | default(False) or
+        jks_entity.convert | default(False)
+
+
+# Java Key Store Format
+- name: "JKS Format"
+  block:
+
+   - set_fact:
+       keystore_path: "{{ certificate.jks.keystore | default(safe_system_jks_path) }}"
+
+   - name: "Converting certificate to JKS format : {{ entity.name }}"
+     shell: |
+       keytool -import \
+         -alias "{{ entity.name }}" \
+         -file "{{ cert_file_der }}" \
+         -keystore "{{ keystore_path }}" \
+         -storepass "{{ certificate.jks.storepass | default('changeit') }}" \
+         -noprompt
+     register: keytool_output
+     changed_when: keytool_output.rc == 0
+     failed_when: keytool_output.rc != 0 and
+                  "already exists" not in keytool_output.stdout
+
+  when: jks_entity.convert | default(False)

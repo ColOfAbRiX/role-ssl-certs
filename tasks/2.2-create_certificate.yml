@@ -1,16 +1,10 @@
 ---
 
-- name: "Discover Generating Entity : {{ entity.name }}"
+- name: "Generating Key Facts : {{ entity.name }}"
   set_fact:
-    generating_entity:   "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
-
-- name: "Generating Key Facts and Certificate Options : {{ entity.name }}"
-  set_fact:
-    generating_key_file: "{{ generating_entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
-    generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
-    generating_key_pass: "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
-    force_remote:        "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create:        "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+    generating_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
+    force_remote:      "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
+    force_create:      "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
 
 - name: "Create Certificate Remote Path : {{ entity.name }}"
   file:
@@ -36,6 +30,7 @@
 
 - name: "Create Temporary OpenSSL Configuration File : {{ entity.name }}"
   tempfile: state=file suffix=openssl
+  changed_when: false
   register: openssl_cfg
 
 - name: "Set OpenSSL Configuration File : {{ entity.name }}"
@@ -69,6 +64,17 @@
    - "{{ csr_file }}"
    - "{{ cert_file }}"
 
+- name: "Check Generating Entity : {{ entity.name }}"
+  set_fact:
+    can_generate: "{{ 'key' in generating_entity }}"
+
+- name: "Generating Certificate Options : {{ entity.name }}"
+  set_fact:
+    generating_key_file:     "{{ generating_entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
+    generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
+    generating_key_pass:     "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
+  when: can_generate
+
 
 ## Self Signed Certificate ##
 
@@ -88,7 +94,8 @@
   environment:
     openssl_passphrase: "{{ generating_key_pass }}"
   register: ss_certificate_creation
-  when: certificate.self_signed | default(False) | bool
+  when: certificate.self_signed | default(False) | bool and
+        can_generate
 
 ## Full Certificate ##
 
@@ -106,7 +113,8 @@
     creates: "{{ cert_file }}"
   environment:
     openssl_passphrase: "{{ generating_key_pass }}"
-  when: not certificate.self_signed | default(False) | bool
+  when: not certificate.self_signed | default(False) | bool and
+        can_generate
 
 # This block is executed only if we want to complete the creation of the
 # certificate with a key we already have
@@ -160,12 +168,6 @@
     seuser: "{{ entity.seuser | default(certificate.seuser | default(omit)) }}"
     serole: "{{ entity.serole | default(certificate.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(certificate.setype | default(omit)) }}"
-
-- name: "Trust Certificate : {{ entity.name }}"
-  include: "3-trust.yml"
-  vars:
-    trust_file: "{{ cert_file }}"
-  when: certificate.trust | default(False) | bool
 
 # If the certificate has been copied from locally, then this will have no effect
 - name: "Download Certificate from Target : {{ entity.name }}"

@@ -48,12 +48,6 @@
     serole: "{{ entity.serole | default(chain.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(chain.setype | default(omit)) }}"
 
-- name: "Trust Chain : {{ entity.name }}"
-  include: "3-trust.yml"
-  vars:
-    trust_file: "{{ chain_file }}"
-  when: chain.trust | default(False) | bool
-
 # If the chain has been copied from locally, then this will have no effect
 - name: "Download Chain from Target : {{ entity.name }}"
   fetch:

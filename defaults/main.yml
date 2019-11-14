@@ -2,14 +2,26 @@
 # defaults file for ssl-certs
 
 # NOTE on paths: Paths for files can be specified at 4 levels that are:
-#  - Global base path
-#  - Entity path
-#  - Object type path
-#  - Object path
+#
+#  - Global base path, defined in ssl_store_path and ssl_base.path variables
+#  - Entity path, defined in ssl_sequence.<entity>.store_path or
+#    ssl_sequence.<entity>.path
+#  - Object type path. defined in ssl_key_dir.name, ssl_csr_dir.name,
+#    ssl_crt_dir.name and ssl_chain_dir.name
+#  - Object path, defined in ssl_sequence.<entity>.<object>.store_path or
+#    ssl_sequence.<entity>.<object>.path
+#
+# An "entity" is one definition inside ssl_sequence while an "object" is a key,
+# a certificate or a chain.
+#
 # The definitions can be used together or override each other with the more
 # nested ones having more priority. The paths are joined together using python's
 # os.path.join which means you can exploit its properties to combine paths.
 # Each layer is responsible to set ownership and permission only at its level.
+#
+# Example:
+#   ssl_store_path/ssl_sequence.<entity>.store_path/ssl_crt_dir.name/
+#     ssl_sequence.<entity>.<object>.store_path/ssl_sequence.<entity>.name.<ext>
 
 # Base path for the store on the Ansible machine
 ssl_store_path: ../file_store/ssl_certificates
@@ -244,3 +256,21 @@ ssl_sequence: []
 #      - client_certificate
 #      - root_ca
 #
+# # Example of installing and trusting an existing certificate
+# - name: client_certificate
+#   certificate:
+#     trust: yes
+#
+# # Example of format conversion (each format is optional)
+# - name:          client_certificate
+#   certificate:
+#     # DER format.
+#     # File permissions are set as per upper "certificate" settings
+#     der:
+#       convert: yes
+#       force_create: yes
+#     # Java Key Store (requires java installed)
+#     jks:
+#       convert: yes
+#       keystore: /tmp/my_store.jks
+#       storepass: changeit

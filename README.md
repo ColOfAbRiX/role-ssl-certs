@@ -4,19 +4,20 @@ Ansible role to create, install, trust and manage [X.509 Certificates](1) (commo
 
 The role tries to be flexible and generic and doesn't want to impose opinionated views on how to manage your PKI. The role has been designed to work as a pipeline and to support as many features as possible and to uniform the way the PKI is created. These are the features of the ssl-certs role:
 
- - It can create self-signed certificates, including Root Certification Authorities.
- - It supports DSA, RSA and ECDSA keys.
- - It outputs keys and certificates in PEM format (more formats to come).
- - It supports the encryption of the private key with a passphrase.
- - It can create signed certificates from existing or new CA.
- - Or it can just stop at the CSR create and later installation of a certificate.
- - It can create certificate chain files.
- - It can generate multiple certificates with the same private key.
- - If you have existing certificates this role can use them.
- - It can install the certificates in a specific location on the target system.
- - And it can use a local path to store the keys and certificates.
- - It can install the certificates on trust stores (OS dependent).
- - It can use extended SSLv3 attributes.
+- It can install and trust certificates on the system
+- It can create self-signed certificates, including Root Certification Authorities.
+- It supports DSA, RSA and ECDSA keys.
+- It outputs keys in PEM format and certificates in PEM, DER or JKS format (more formats to come).
+- It supports the encryption of the private key with a passphrase.
+- It can create signed certificates from existing or new CA.
+- Or it can just stop at the CSR create and later installation of a certificate.
+- It can create certificate chain files.
+- It can generate multiple certificates with the same private key.
+- If you have existing certificates this role can use them.
+- It can install the certificates in a specific location on the target system.
+- And it can use a local path to store the keys and certificates.
+- It can install the certificates on trust stores (OS dependent).
+- It can use extended SSLv3 attributes.
 
 ## Requirements and Dependencies
 
@@ -24,7 +25,7 @@ The role only requires OpenSSL which is installed where required by the role its
 
 The OS-level trust of certificate is supported only on CentOS/RedHat 7.
 
-# Description
+## Description
 
 The role works by using the `ssl_sequence` list of dictionaries as a sequence of entities to create. It will process each entity one at the time and for each one of them it will examine the `key`, `certificate` and `chain` key, one at, the time and create the appropriate files.
 
@@ -102,9 +103,9 @@ More examples are in the [default configuration](defaults/main.yml) file.
 
 In order of priority
 
-* Fetch also CSR files
-* Support for PKC#12 format
-* Cascade recreation of entities
+- Fetch also CSR files
+- Support for PKC#12 format
+- Cascade recreation of entities
 
 ## License
 

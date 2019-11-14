@@ -10,7 +10,7 @@
   set_fact:
     check_results:
      - "{{ sanitized_ssl_seq | check_sequence_names_present }}"
-     - "{{ sanitized_ssl_seq | check_sequence_names_uniqe }}"
+     - "{{ sanitized_ssl_seq | check_sequence_names_unique }}"
      - "{{ sanitized_ssl_seq | check_sequence_signing_type }}"
      - "{{ sanitized_ssl_seq | check_sequence_signing_keys }}"
      - "{{ sanitized_ssl_seq | check_sequence_generating_keys }}"

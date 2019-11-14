@@ -2,3 +2,7 @@
 
 ssl_packages_dependencies:
  - openssl
+
+ssl_os_trust_store_path: /etc/pki/ca-trust/source/anchors
+
+ssl_discover_system_jks_store: ''

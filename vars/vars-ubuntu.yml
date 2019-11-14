@@ -1,0 +1,8 @@
+---
+
+ssl_packages_dependencies:
+ - openssl
+
+ssl_os_trust_store_path: /usr/local/share/ca-certificates
+
+ssl_discover_system_jks_store: "readlink -e $(dirname $(readlink -e $(which keytool)))/../lib/security/cacerts"
