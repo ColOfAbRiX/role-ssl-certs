@@ -5,6 +5,7 @@
     generating_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
     force_remote:      "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:      "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+  tags: ssl-certs
 
 - name: "Create Certificate Remote Path : {{ entity.name }}"
   file:
@@ -16,6 +17,7 @@
     seuser: "{{ ssl_crt_dir.seuser | default(omit) }}"
     serole: "{{ ssl_crt_dir.serole | default(omit) }}"
     setype: "{{ ssl_crt_dir.setype | default(omit) }}"
+  tags: ssl-certs
 
 - name: "Create CSR Remote Path : {{ entity.name }}"
   file:
@@ -27,11 +29,13 @@
     seuser: "{{ ssl_csr_dir.seuser | default(omit) }}"
     serole: "{{ ssl_csr_dir.serole | default(omit) }}"
     setype: "{{ ssl_csr_dir.setype | default(omit) }}"
+  tags: ssl-certs
 
 - name: "Create Temporary OpenSSL Configuration File : {{ entity.name }}"
   tempfile: state=file suffix=openssl
   changed_when: false
   register: openssl_cfg
+  tags: ssl-certs
 
 - name: "Set OpenSSL Configuration File : {{ entity.name }}"
   vars:
@@ -46,6 +50,7 @@
     dest:   "{{ openssl_cfg.path }}"
     mode:   '0644'
   changed_when: false
+  tags: ssl-certs
 
 - name: "Copy Local Certificate to Target: {{ entity.name }}"
   copy:
@@ -54,6 +59,7 @@
   when: not force_remote
   register: certificate_copied_from_local
   ignore_errors: yes
+  tags: ssl-certs
 
 - name: "Force Creation of the Certificate : {{ entity.name }}"
   file:
@@ -63,10 +69,12 @@
   with_items:
    - "{{ csr_file }}"
    - "{{ cert_file }}"
+  tags: ssl-certs
 
 - name: "Check Generating Entity : {{ entity.name }}"
   set_fact:
     can_generate: "{{ 'key' in generating_entity }}"
+  tags: ssl-certs
 
 - name: "Generating Certificate Options : {{ entity.name }}"
   set_fact:
@@ -74,6 +82,7 @@
     generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
     generating_key_pass:     "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
   when: can_generate
+  tags: ssl-certs
 
 
 ## Self Signed Certificate ##
@@ -96,6 +105,7 @@
   register: ss_certificate_creation
   when: certificate.self_signed | default(False) | bool and
         can_generate
+  tags: ssl-certs
 
 ## Full Certificate ##
 
@@ -115,6 +125,7 @@
     openssl_passphrase: "{{ generating_key_pass }}"
   when: not certificate.self_signed | default(False) | bool and
         can_generate
+  tags: ssl-certs
 
 # This block is executed only if we want to complete the creation of the
 # certificate with a key we already have
@@ -157,6 +168,7 @@
 
   when: not certificate.self_signed | default(False) | bool and
         certificate.signing_key | default('') != ''
+  tags: ssl-certs
 
 
 - name: "Certificate File Permissions : {{ entity.name }}"
@@ -168,6 +180,7 @@
     seuser: "{{ entity.seuser | default(certificate.seuser | default(omit)) }}"
     serole: "{{ entity.serole | default(certificate.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(certificate.setype | default(omit)) }}"
+  tags: ssl-certs
 
 # If the certificate has been copied from locally, then this will have no effect
 - name: "Download Certificate from Target : {{ entity.name }}"
@@ -180,3 +193,4 @@
           certificate_creation | changed or
           ss_certificate_creation | changed
         )
+  tags: ssl-certs

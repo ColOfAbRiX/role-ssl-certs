@@ -3,11 +3,13 @@
 - name: "Discover Certificates in Chain : {{ entity.name }}"
   set_fact:
     certs_files_in_chain: "{{ ssl_sequence | cert_files_in_chain(chain.certificates | default([]), ssl_base.path, ssl_chain_dir) | list }}"
+  tags: ssl-certs
 
 - name: "Chain Options : {{ entity.name }}"
   set_fact:
     force_remote:         "{{ chain.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create:         "{{ chain.force_create | default(entity.force_create | default(False)) | bool }}"
+  tags: ssl-certs
 
 - name: "Create Remote Path : {{ entity.name }}"
   file:
@@ -19,6 +21,7 @@
     seuser: "{{ ssl_chain_dir.seuser | default(omit) }}"
     serole: "{{ ssl_chain_dir.serole | default(omit) }}"
     setype: "{{ ssl_chain_dir.setype | default(omit) }}"
+  tags: ssl-certs
 
 - name: "Copy Local Chain to Target : {{ entity.name }}"
   copy:
@@ -27,16 +30,19 @@
   when: not force_remote
   register: chain_copied_from_local
   ignore_errors: yes
+  tags: ssl-certs
 
 - name: "Force Creation of the Chain : {{ entity.name }}"
   file: path="{{ chain_file }}" state=absent
   when: force_create
+  tags: ssl-certs
 
 - name: "Create Certificate Chain : {{ entity.name }}"
   shell: cat {{ certs_files_in_chain | join(' ') }} > "{{ chain_file }}"
   args:
     creates: "{{ chain_file }}"
   register: chain_creation
+  tags: ssl-certs
 
 - name: "Chain File Permissions : {{ entity.name }}"
   file:
@@ -47,6 +53,7 @@
     seuser: "{{ entity.seuser | default(chain.seuser | default(omit)) }}"
     serole: "{{ entity.serole | default(chain.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(chain.setype | default(omit)) }}"
+  tags: ssl-certs
 
 # If the chain has been copied from locally, then this will have no effect
 - name: "Download Chain from Target : {{ entity.name }}"
@@ -58,3 +65,4 @@
           chain_copied_from_local | failed or
           chain_creation | changed
         )
+  tags: ssl-certs
