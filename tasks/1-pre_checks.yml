@@ -5,6 +5,7 @@
 - name: "Sanitize Data"
   set_fact:
     sanitized_ssl_seq: "{{ ssl_sequence | default([]) }}"
+  tags: ssl-certs
 
 - name: "Apply All Checks"
   set_fact:
@@ -14,6 +15,7 @@
      - "{{ sanitized_ssl_seq | check_sequence_signing_type }}"
      - "{{ sanitized_ssl_seq | check_sequence_signing_keys }}"
      - "{{ sanitized_ssl_seq | check_sequence_generating_keys }}"
+  tags: ssl-certs
 
 - name: "Validate All Checks"
   debug: msg="{{ item.message }}"
@@ -21,3 +23,4 @@
   when: not item.result
   with_items:
    - "{{ check_results }}"
+  tags: ssl-certs

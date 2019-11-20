@@ -6,6 +6,7 @@
     key_pass:     "{% if private_key.encryption | default('') != '' %}{{ private_key.passphrase }}{% endif %}"
     force_remote: "{{ private_key.force_remote | default(entity.force_remote | default(False)) | bool }}"
     force_create: "{{ private_key.force_create | default(entity.force_create | default(False)) | bool }}"
+  tags: ssl-certs
 
 - name: "Create Remote Path : {{ entity.name }}"
   file:
@@ -17,6 +18,7 @@
     seuser: "{{ ssl_key_dir.seuser | default(omit) }}"
     serole: "{{ ssl_key_dir.serole | default(omit) }}"
     setype: "{{ ssl_key_dir.setype | default(omit) }}"
+  tags: ssl-certs
 
 - name: "Copy Local Key to Target : {{ entity.name }}"
   copy:
@@ -25,10 +27,12 @@
   when: not force_remote
   register: private_key_copied_from_local
   ignore_errors: yes
+  tags: ssl-certs
 
 - name: "Force Creation of the Key : {{ entity.name }}"
   file: path="{{ key_file }}" state=absent
   when: force_create
+  tags: ssl-certs
 
 
 ##  DSA Key  ##
@@ -59,6 +63,7 @@
            key_has_pass
 
   when: private_key.type | default('rsa') == 'dsa'
+  tags: ssl-certs
 
 ##  RSA Key  ##
 
@@ -75,6 +80,7 @@
     openssl_passphrase: "{{ key_pass }}"
   register: private_key_rsa_creation
   when: private_key.type | default('rsa') == 'rsa'
+  tags: ssl-certs
 
 ##  ECDSA Key  ##
 
@@ -104,6 +110,7 @@
            key_has_pass
 
   when: private_key.type | default('rsa') == 'ecdsa'
+  tags: ssl-certs
 
 
 - name: "Key File Permissions : {{ entity.name }}"
@@ -115,6 +122,7 @@
     seuser: "{{ entity.seuser | default(private_key.seuser | default(omit)) }}"
     serole: "{{ entity.serole | default(private_key.serole | default(omit)) }}"
     setype: "{{ entity.setype | default(private_key.setype | default(omit)) }}"
+  tags: ssl-certs
 
 # If the key has been copied from locally, then this will have no effect
 - name: "Download Key from Target : {{ entity.name }}"
@@ -128,3 +136,4 @@
           private_key_dsa_creation | changed or
           private_key_ecdsa_creation | changed
         )
+  tags: ssl-certs

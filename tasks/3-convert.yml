@@ -6,6 +6,7 @@
     cert_file_der: "{{ (cert_file | splitext)[0] }}.der"
     cert_file_jks: "{{ (cert_file | splitext)[0] }}.jks"
     safe_system_jks_path: "{% if system_jks_path | failed %}{{ cert_file_jks }}{% else %}{{ system_jks_path.stdout }}{% endif %}"
+  tags: ssl-certs
 
 
 # DER Format
@@ -37,6 +38,7 @@
 
   when: der_entity.convert | default(False) or
         jks_entity.convert | default(False)
+  tags: ssl-certs
 
 
 # Java Key Store Format
@@ -60,3 +62,4 @@
                   "already exists" not in keytool_output.stdout
 
   when: jks_entity.convert | default(False)
+  tags: ssl-certs

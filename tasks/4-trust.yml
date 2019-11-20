@@ -12,6 +12,7 @@
     serole: object_r
     setype: cert_t
   register: certificate_installation
+  tags: ssl-certs
 
 - name: "Update RHEL/CentOS CA Store : {{ trust_file | basename }}"
   command: update-ca-trust
@@ -19,6 +20,7 @@
   poll: 0
   when: ansible_distribution in ['CentOS', 'RedHat'] and
         certificate_installation | changed
+  tags: ssl-certs
 
 - name: "Update Debian/Ubuntu CA Store : {{ trust_file | basename }}"
   command: update-ca-certificates
@@ -26,3 +28,4 @@
   poll: 0
   when: ansible_distribution in ['Debian', 'Ubuntu'] and
         certificate_installation | changed
+  tags: ssl-certs
