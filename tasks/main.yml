@@ -36,6 +36,7 @@
   changed_when: false
   ignore_errors: true
   register: system_jks_path
+  tags: ssl-certs
 
 - include: "2-manage_entity.yml"
   with_items:
