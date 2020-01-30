@@ -5,4 +5,5 @@ ssl_packages_dependencies:
 
 ssl_os_trust_store_path: /usr/local/share/ca-certificates
 
+# See https://stackoverflow.com/a/13725671
 ssl_discover_system_jks_store: "readlink -e $(dirname $(readlink -e $(which keytool)))/../lib/security/cacerts"

@@ -31,13 +31,6 @@
     setype: "{{ ssl_base.setype | default(omit) }}"
   tags: ssl-certs
 
-- name: "Discover System JKS"
-  shell: "{{ ssl_discover_system_jks_store }}"
-  changed_when: false
-  ignore_errors: true
-  register: system_jks_path
-  tags: ssl-certs
-
 - include: "2-manage_entity.yml"
   with_items:
    - "{{ ssl_sequence | default([]) }}"

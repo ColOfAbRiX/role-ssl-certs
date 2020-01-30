@@ -5,7 +5,6 @@
     jks_entity: "{{ certificate.jks | default({}) }}"
     cert_file_der: "{{ (cert_file | splitext)[0] }}.der"
     cert_file_jks: "{{ (cert_file | splitext)[0] }}.jks"
-    safe_system_jks_path: "{% if system_jks_path | failed %}{{ cert_file_jks }}{% else %}{{ system_jks_path.stdout }}{% endif %}"
   tags: ssl-certs
 
 
@@ -45,9 +44,18 @@
 - name: "JKS Format"
   block:
 
+   - name: "Discover System JKS"
+     shell: "{{ ssl_discover_system_jks_store }}"
+     changed_when: false
+     register: system_jks_path
+
+   - set_fact:
+       safe_system_jks_path: "{% if system_jks_path | failed %}{{ cert_file_jks }}{% else %}{{ system_jks_path.stdout }}{% endif %}"
+
    - set_fact:
        keystore_path: "{{ certificate.jks.keystore | default(safe_system_jks_path) }}"
 
+   # FIXME: This is not just converting to JKS! This trusts the certificate on the system
    - name: "Converting certificate to JKS format : {{ entity.name }}"
      shell: |
        keytool -import \

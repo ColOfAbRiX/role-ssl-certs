@@ -1,0 +1,9 @@
+---
+
+ssl_packages_dependencies:
+ - openssl
+
+ssl_os_trust_store_path: /usr/local/share/ca-certificates
+
+# See https://stackoverflow.com/a/11937940
+ssl_discover_system_jks_store: 'echo $(readlink -f "$(which java)" | sed "s:bin/java::")jre/lib/security/cacerts'
