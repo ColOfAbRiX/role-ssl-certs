@@ -5,6 +5,7 @@
     private_key:      "{{ entity.key | default(omit) }}"
     certificate:      "{{ entity.certificate | default(omit) }}"
     chain:            "{{ entity.chain | default(omit) }}"
+    cacheable: false
   tags: ssl-certs
 
 - name: "Build File Paths : {{ entity.name }}"
@@ -21,10 +22,12 @@
     # Chain
     chain_file:       "{{ entity | object_path('chain', ssl_base.path, ssl_chain_dir) }}"
     local_chain_file: "{{ entity | object_path('chain', ssl_store_path, ssl_chain_dir, remote=False) }}"
+    cacheable: false
   tags: ssl-certs
 
 
-- include: "2.1-create_private_key.yml"
+- name: "Create private key"
+  include_tasks: "2.1-create_private_key.yml"
   when: entity.key is defined
   tags: ssl-certs
 
@@ -32,15 +35,17 @@
 - name: "Certificate Handling"
   block:
 
-   - include: "2.2-create_certificate.yml"
+   - name: "Create certificate"
+     include_tasks: "2.2-create_certificate.yml"
 
-   - include: "3-convert.yml"
+   - name: "Convert certificate formats"
+     include_tasks: "3-convert.yml"
 
    - name: "Trust Certificate : {{ entity.name }}"
-     include: "4-trust.yml"
+     include_tasks: "4-trust.yml"
      vars:
        trust_file: "{{ cert_file }}"
-     when: (certificate | default({})).trust | default(False) | bool
+     when: (certificate | default({})).trust | default(false) | bool
 
   when: entity.certificate is defined
   tags: ssl-certs
@@ -49,15 +54,17 @@
 - name: "Certificate Chain Handling"
   block:
 
-   - include: "2.3-create_chain.yml"
+   - name: "Create certificate chain"
+     include_tasks: "2.3-create_chain.yml"
 
-   - include: "3-convert.yml"
+   - name: "Convert chain formats"
+     include_tasks: "3-convert.yml"
 
    - name: "Trust Chain : {{ entity.name }}"
-     include: "4-trust.yml"
+     include_tasks: "4-trust.yml"
      vars:
        trust_file: "{{ chain_file }}"
-     when: chain.trust | default(False) | bool
+     when: chain.trust | default(false) | bool
 
   when: entity.chain is defined and
         entity.chain.certificates | default([]) | length > 0

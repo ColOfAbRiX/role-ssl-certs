@@ -3,8 +3,9 @@
 - name: "Generating Key Facts : {{ entity.name }}"
   set_fact:
     generating_entity: "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.generating_key | default(entity.name))) | list | first }}"
-    force_remote:      "{{ certificate.force_remote | default(entity.force_remote | default(False)) | bool }}"
-    force_create:      "{{ certificate.force_create | default(entity.force_create | default(False)) | bool }}"
+    force_remote:      "{{ certificate.force_remote | default(entity.force_remote | default(false)) | bool }}"
+    force_create:      "{{ certificate.force_create | default(entity.force_create | default(false)) | bool }}"
+    cacheable: false
   tags: ssl-certs
 
 - name: "Create Certificate Remote Path : {{ entity.name }}"
@@ -58,7 +59,7 @@
     dest: "{{ cert_file }}"
   when: not force_remote
   register: certificate_copied_from_local
-  ignore_errors: yes
+  ignore_errors: true
   tags: ssl-certs
 
 - name: "Force Creation of the Certificate : {{ entity.name }}"
@@ -66,7 +67,7 @@
     path: "{{ item }}"
     state: absent
   when: force_create
-  with_items:
+  loop:
    - "{{ csr_file }}"
    - "{{ cert_file }}"
   tags: ssl-certs
@@ -74,6 +75,7 @@
 - name: "Check Generating Entity : {{ entity.name }}"
   set_fact:
     can_generate: "{{ 'key' in generating_entity }}"
+    cacheable: false
   tags: ssl-certs
 
 - name: "Generating Certificate Options : {{ entity.name }}"
@@ -81,6 +83,7 @@
     generating_key_file:     "{{ generating_entity | object_path('key', ssl_base.path, ssl_key_dir) }}"
     generating_key_has_pass: "{{ generating_entity.key.encryption | default('') != '' }}"
     generating_key_pass:     "{% if generating_entity.key.encryption | default('') != '' %}{{ generating_entity.key.passphrase }}{% endif %}"
+    cacheable: false
   when: can_generate
   tags: ssl-certs
 
@@ -103,7 +106,7 @@
   environment:
     openssl_passphrase: "{{ generating_key_pass }}"
   register: ss_certificate_creation
-  when: certificate.self_signed | default(False) | bool and
+  when: certificate.self_signed | default(false) | bool and
         can_generate
   tags: ssl-certs
 
@@ -123,7 +126,7 @@
     creates: "{{ cert_file }}"
   environment:
     openssl_passphrase: "{{ generating_key_pass }}"
-  when: not certificate.self_signed | default(False) | bool and
+  when: not certificate.self_signed | default(false) | bool and
         can_generate
   tags: ssl-certs
 
@@ -134,6 +137,7 @@
    - name: "Discover Signing Entity : {{ entity.name }}"
      set_fact:
        signing_entity:   "{{ (ssl_sequence | selectattr('name', 'equalto', certificate.signing_key)) | list | first }}"
+       cacheable: false
 
    - name: "Signing Key Facts : {{ entity.name }}"
      set_fact:
@@ -141,6 +145,7 @@
        signing_crt_file: "{{ signing_entity | object_path('cert', ssl_base.path, ssl_crt_dir) }}"
        signing_key_has_pass: "{{ signing_entity.key.encryption | default('') != '' }}"
        signing_key_pass: "{% if signing_entity.key.encryption | default('') != '' %}{{ signing_entity.key.passphrase }}{% endif %}"
+       cacheable: false
 
    - name: "Generate Certificate Serial Number : {{ entity.name }}"
      shell: openssl rand -hex 16
@@ -166,7 +171,7 @@
        openssl_passphrase: "{{ signing_key_pass }}"
      register: certificate_creation
 
-  when: not certificate.self_signed | default(False) | bool and
+  when: not certificate.self_signed | default(false) | bool and
         certificate.signing_key | default('') != ''
   tags: ssl-certs
 
@@ -187,10 +192,10 @@
   fetch:
     src:  "{{ cert_file }}"
     dest: "{{ local_cert_file }}"
-    flat: yes
-  when: certificate.fetch | default(True) | bool and (
-          certificate_copied_from_local | failed or
-          certificate_creation | changed or
-          ss_certificate_creation | changed
+    flat: true
+  when: certificate.fetch | default(true) | bool and (
+          certificate_copied_from_local is failed or
+          certificate_creation is changed or
+          ss_certificate_creation is changed
         )
   tags: ssl-certs

@@ -1,4 +1,5 @@
 # .gitignore
 
+.history/
+__pycache__/
 *.pyc
-

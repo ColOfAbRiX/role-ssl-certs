@@ -1,10 +1,12 @@
 ---
 
-- set_fact:
+- name: "Set certificate conversion facts"
+  set_fact:
     der_entity: "{{ certificate.der | default({}) }}"
     jks_entity: "{{ certificate.jks | default({}) }}"
     cert_file_der: "{{ (cert_file | splitext)[0] }}.der"
     cert_file_jks: "{{ (cert_file | splitext)[0] }}.jks"
+    cacheable: false
   tags: ssl-certs
 
 
@@ -13,8 +15,10 @@
   block:
 
    - name: "Force DER creations : {{ entity.name }}"
-     file: path="{{ cert_file_der }}" state=absent
-     when: der_entity.force_create | default(False)
+     file:
+       path: "{{ cert_file_der }}"
+       state: absent
+     when: der_entity.force_create | default(false)
 
    - name: "Converting certificate to DER format : {{ entity.name }}"
      shell: |
@@ -35,8 +39,8 @@
        serole: "{{ der_entity.serole | default(entity.serole | default(certificate.serole | default(omit))) }}"
        setype: "{{ der_entity.setype | default(entity.setype | default(certificate.setype | default(omit))) }}"
 
-  when: der_entity.convert | default(False) or
-        jks_entity.convert | default(False)
+  when: der_entity.convert | default(false) or
+        jks_entity.convert | default(false)
   tags: ssl-certs
 
 
@@ -49,11 +53,15 @@
      changed_when: false
      register: system_jks_path
 
-   - set_fact:
-       safe_system_jks_path: "{% if system_jks_path | failed %}{{ cert_file_jks }}{% else %}{{ system_jks_path.stdout }}{% endif %}"
+   - name: "Set safe system JKS path"
+     set_fact:
+       safe_system_jks_path: "{% if not system_jks_path.skipped is defined and system_jks_path.stdout is defined and system_jks_path.stdout != '' %}{{ system_jks_path.stdout }}{% else %}{{ cert_file_jks }}{% endif %}"
+       cacheable: false
 
-   - set_fact:
+   - name: "Set keystore path"
+     set_fact:
        keystore_path: "{{ certificate.jks.keystore | default(safe_system_jks_path) }}"
+       cacheable: false
 
    # FIXME: This is not just converting to JKS! This trusts the certificate on the system
    - name: "Converting certificate to JKS format : {{ entity.name }}"
@@ -69,5 +77,5 @@
      failed_when: keytool_output.rc != 0 and
                   "already exists" not in keytool_output.stdout
 
-  when: jks_entity.convert | default(False)
+  when: jks_entity.convert | default(false)
   tags: ssl-certs

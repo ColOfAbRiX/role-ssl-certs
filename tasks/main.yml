@@ -2,27 +2,32 @@
 # tasks file for ssl-certs
 
 - name: "Include OS Variables"
-  include_vars: "{{ item }}"
-  with_first_found:
-   - "vars-{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version}}.yml"
-   - "vars-{{ ansible_distribution | lower }}.yml"
-   - "vars-{{ ansible_os_family | lower }}.yml"
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "vars-{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version}}.yml"
+        - "vars-{{ ansible_distribution | lower }}.yml"
+        - "vars-{{ ansible_os_family | lower }}.yml"
+      paths:
+        - "{{ role_path }}/vars"
   tags: ssl-certs
 
-- include: "1-pre_checks.yml"
+- name: "Run pre-checks"
+  include_tasks: "1-pre_checks.yml"
   tags: ssl-certs
 
 - name: "Install Dependencies"
-  package: name="{{ item }}" state=present
-  with_items:
-   - "{{ ssl_packages_dependencies }}"
+  package:
+    name: "{{ ssl_packages_dependencies }}"
+    state: present
   tags: ssl-certs
 
 - name: "Create Base Directory"
   file:
     path:   "{{ ssl_base.path }}"
     state:  directory
-    force:  yes
+    force:  true
     mode:   "{{ ssl_base.mode | default(omit) }}"
     owner:  "{{ ssl_base.owner | default(omit) }}"
     group:  "{{ ssl_base.group | default(omit) }}"
@@ -31,10 +36,10 @@
     setype: "{{ ssl_base.setype | default(omit) }}"
   tags: ssl-certs
 
-- include: "2-manage_entity.yml"
-  with_items:
-   - "{{ ssl_sequence | default([]) }}"
-  when: entity.enabled | default(True) | bool
+- name: "Manage SSL entities"
+  include_tasks: "2-manage_entity.yml"
+  loop: "{{ ssl_sequence | default([]) }}"
+  when: entity.enabled | default(true) | bool
   loop_control:
     loop_var: entity
   tags: ssl-certs
