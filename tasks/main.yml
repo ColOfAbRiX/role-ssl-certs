@@ -1,16 +1,13 @@
 ---
 # tasks file for ssl-certs
 
-- name: "Include OS Variables"
-  include_vars: "{{ lookup('first_found', params) }}"
+- name: "Load Variables"
+  ansible.builtin.include_vars: "{{ lookup('first_found', files) }}"
   vars:
-    params:
-      files:
-        - "vars-{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version}}.yml"
-        - "vars-{{ ansible_distribution | lower }}.yml"
-        - "vars-{{ ansible_os_family | lower }}.yml"
-      paths:
-        - "{{ role_path }}/vars"
+    files:
+      - "vars/vars-{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+      - "vars/vars-{{ ansible_distribution | lower }}.yml"
+      - "vars/vars-{{ ansible_os_family | lower }}.yml"
   tags: ssl-certs
 
 - name: "Run pre-checks"

@@ -1,5 +1,9 @@
-# .gitignore
-
-.history/
 __pycache__/
+.cache
+.gradle/
+.history/
+.metals/
+.vscode/
 *.pyc
+*.retry
+*.retry
